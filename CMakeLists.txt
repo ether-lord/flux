@@ -31,6 +31,8 @@ set(
   src/resources_manager.cpp src/resources_manager.h
   src/shader.cpp src/shader.h
   src/shader_program.cpp src/shader_program.h
+  src/system_manager.cpp src/system_manager.h
+  src/types.cpp src/types.h
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})

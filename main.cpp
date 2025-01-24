@@ -1,47 +1,27 @@
-#define GLFW_INCLUDE_NONE
-
 #include <iostream>
 
-#include "glad.h"
-#include "glfw3.h"
 #include "resources_manager.h"
 #include "shader.h"
 #include "shader_program.h"
+#include "system_manager.h"
+#include "types.h"
 
 using namespace flux;
 using namespace std;
 
 using namespace flux::shader;
+using namespace flux::types;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
 
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
-
 int main() {
   resources::ResourcesManager resources_manager;
+  system::SystemManager sys_manager;
 
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  auto window = sys_manager.GetWindow();
 
-  GLFWwindow *window =
-      glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-  if (window == NULL) {
-    std::cout << "Failed to create GLFW window" << std::endl;
-    glfwTerminate();
-    return -1;
-  }
-  glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
-    return -1;
-  }
 
   auto vertex_shader_src = resources_manager.GetShaderSource("vertex");
   auto vertex_shader = Shader(ShaderType::VERTEX, vertex_shader_src);
