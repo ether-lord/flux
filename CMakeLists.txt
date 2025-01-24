@@ -34,18 +34,12 @@ target_include_directories(
   src
   lib/glad/include/glad
   lib/glfw/include/GLFW
-)
-
-target_include_directories(
-  ${PROJECT_NAME} PUBLIC
   lib/json/include/nlohmann
 )
 
 target_link_libraries(
   ${PROJECT_NAME} PRIVATE
   flux-framework
-  ${CMAKE_DL_LIBS}
-  glad
-  glfw
-  OpenGL::GL
+  ${CMAKE_DL_LIBS} glad glfw OpenGL::GL
+  nlohmann_json::nlohmann_json
 )
