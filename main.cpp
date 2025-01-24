@@ -61,7 +61,7 @@ int main() {
   // ------------------------------------
   // vertex shader
   unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  auto vertex_shader = resources_manager.GetFileSource("res/shaders/vertex.glsl");
+  auto vertex_shader = resources_manager.GetShaderSource("vertex");
   auto vertex_shader_src = vertex_shader.c_str();
   glShaderSource(vertexShader, 1, &vertex_shader_src, NULL);
   glCompileShader(vertexShader);

@@ -1,0 +1,8 @@
+{
+  "res": {
+    "shader": {
+      "location": "/res/shaders/",
+      "default_ext": ".glsl"
+    }
+  }
+}

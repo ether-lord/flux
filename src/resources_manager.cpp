@@ -2,26 +2,45 @@
 
 #include <unistd.h>
 
-#include <filesystem>
-#include <memory>
-#include <iostream>
-#include <cstring>
 #include <cstdio>
+#include <cstring>
+#include <filesystem>
+#include <iostream>
+#include <memory>
 
 namespace fs = std::filesystem;
 
-using std::string;
 using std::make_unique;
+using std::string;
 
 namespace flux::resources {
 
-ResourcesManager::ResourcesManager() { cwd_ = fs::current_path(); }
+ResourcesManager::ResourcesManager() {
+  cwd_ = fs::current_path();
+
+  std::string settings_src = this->GetFileSource(settings_path_);
+  settings_ = json::parse(settings_src);
+
+  if (settings_.is_discarded()) {
+    std::cerr << "failed to read settings.json from " << settings_src
+              << std::endl;
+    return;
+  }
+
+  shaders_location_ = settings_["res"]["shader"]["location"];
+  shaders_default_ext_ = settings_["res"]["shader"]["default_ext"];
+}
 
 string ResourcesManager::GetFileSource(const string &path) const {
   string file_path = cwd_;
   file_path.append("/").append(path);
 
   return get_file_source(file_path);
+}
+
+std::string ResourcesManager::GetShaderSource(const std::string &name) const {
+  string shader_path = shaders_location_ + name + shaders_default_ext_;
+  return this->GetFileSource(shader_path);
 }
 
 std::string get_file_source(const std::string &path) {
