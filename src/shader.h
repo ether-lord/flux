@@ -6,6 +6,8 @@
 
 namespace flux::shader {
 
+const int LOG_BUFF_SIZE = 1024;
+
 enum class ShaderType {
   VERTEX = GL_VERTEX_SHADER,
   FRAGMENT = GL_FRAGMENT_SHADER
@@ -19,11 +21,9 @@ class Shader {
   unsigned int GetId() const;
   int GetCompileStatus() const;
 
-  std::string GetShaderInfoLog() const;
+  std::string GetInfoLog() const;
 
  private:
-  const size_t log_buff_size_ = 1024;
-
   int compile_status_;
   unsigned int id_;
   std::string source_;

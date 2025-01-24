@@ -6,6 +6,7 @@
 #include "glfw3.h"
 #include "resources_manager.h"
 #include "shader.h"
+#include "shader_program.h"
 
 using namespace flux;
 using namespace std;
@@ -48,7 +49,7 @@ int main() {
 
   if (!vertex_shader.GetCompileStatus()) {
     std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-              << vertex_shader.GetShaderInfoLog() << std::endl;
+              << vertex_shader.GetInfoLog() << std::endl;
   }
 
   auto fragment_shader_src = resources_manager.GetShaderSource("fragment");
@@ -57,21 +58,20 @@ int main() {
 
   if (!fragment_shader.GetCompileStatus()) {
     std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
-              << fragment_shader.GetShaderInfoLog() << std::endl;
+              << fragment_shader.GetInfoLog() << std::endl;
   }
 
-  unsigned int shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertex_shader.GetId());
-  glAttachShader(shaderProgram, fragment_shader.GetId());
-  glLinkProgram(shaderProgram);
-  glUseProgram(shaderProgram);
+  auto shader_program = ShaderProgram();
+  shader_program.AttachShader(vertex_shader);
+  shader_program.AttachShader(fragment_shader);
+  shader_program.Link();
+  shader_program.Use();
 
-  // glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-  // if (!success) {
-  //   glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-  //   std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-  //             << infoLog << std::endl;
-  // }
+  if (!shader_program.GetLinkStatus()) {
+    std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+              << shader_program.GetInfoLog() << std::endl;
+  }
+
   glDeleteShader(fragment_shader.GetId());
   glDeleteShader(fragment_shader.GetId());
 
@@ -122,7 +122,7 @@ int main() {
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
   glDeleteBuffers(1, &EBO);
-  glDeleteProgram(shaderProgram);
+  shader_program.Delete();
 
   glfwTerminate();
   return 0;

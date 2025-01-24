@@ -19,11 +19,11 @@ unsigned int Shader::GetId() const { return id_; }
 
 int Shader::GetCompileStatus() const { return compile_status_; }
 
-std::string Shader::GetShaderInfoLog() const {
+std::string Shader::GetInfoLog() const {
   std::string log;
-  log.reserve(log_buff_size_);
+  log.reserve(LOG_BUFF_SIZE);
 
-  glGetShaderInfoLog(id_, log_buff_size_, NULL, log.data());
+  glGetShaderInfoLog(id_, LOG_BUFF_SIZE, NULL, log.data());
   return log;
 }
 

@@ -30,6 +30,7 @@ set(
   ENGINE_SOURCES
   src/resources_manager.cpp src/resources_manager.h
   src/shader.cpp src/shader.h
+  src/shader_program.cpp src/shader_program.h
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
