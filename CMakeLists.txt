@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.16)
 set(PROJECT_NAME flux)
 set(CMAKE_CXX_STANDARD 17)
 
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   add_compile_options(
     -fsanitize=address
@@ -23,6 +25,7 @@ find_package(OpenGL REQUIRED)
 add_subdirectory(src)
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
+add_subdirectory(lib/json)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
@@ -33,8 +36,13 @@ target_include_directories(
   lib/glfw/include/GLFW
 )
 
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC
+  lib/json/include/nlohmann
+)
+
 target_link_libraries(
-  ${PROJECT_NAME}
+  ${PROJECT_NAME} PRIVATE
   flux-framework
   ${CMAKE_DL_LIBS}
   glad
