@@ -13,8 +13,8 @@ class ResourcesManager {
  public:
   ResourcesManager();
 
-  std::string GetFileSource(const std::string&) const;
-  std::string GetShaderSource(const std::string&) const;
+  std::string GetFileSource(const std::string& rel_path) const;
+  std::string GetShaderSource(const std::string& name) const;
 
  private:
   const std::string settings_path_ = "/res/settings.json";

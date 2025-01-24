@@ -8,6 +8,6 @@ class Shader {
  public:
   Shader(const std::string& source);
 
-  unsigned int id_;
+  unsigned int id;
 };
 }  // namespace flux::shader

@@ -22,15 +22,21 @@ project(${PROJECT_NAME})
 
 find_package(OpenGL REQUIRED)
 
-add_subdirectory(src)
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
 add_subdirectory(lib/json)
 
-add_executable(${PROJECT_NAME} main.cpp)
+set(
+  ENGINE_SOURCES
+  src/resources_manager.cpp src/resources_manager.h
+  src/shader.cpp src/shader.h
+)
+
+add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
+
 
 target_include_directories(
-  ${PROJECT_NAME} PRIVATE
+  ${PROJECT_NAME} PUBLIC
   src
   lib/glad/include/glad
   lib/glfw/include/GLFW
@@ -38,8 +44,7 @@ target_include_directories(
 )
 
 target_link_libraries(
-  ${PROJECT_NAME} PRIVATE
-  flux-framework
+  ${PROJECT_NAME} PUBLIC
   ${CMAKE_DL_LIBS} glad glfw OpenGL::GL
   nlohmann_json::nlohmann_json
 )
