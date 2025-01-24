@@ -1,8 +1,13 @@
-
-#include <glfw3.h>
-#include <glad.h>
+#define GLFW_INCLUDE_NONE
 
 #include <iostream>
+
+#include "glad.h"
+#include "glfw3.h"
+#include "resources_manager.h"
+
+using namespace flux;
+using namespace std;
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -11,13 +16,6 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-const char *vertexShaderSource =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
 const char *fragmentShaderSource =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
@@ -27,6 +25,8 @@ const char *fragmentShaderSource =
     "}\n\0";
 
 int main() {
+  resources::ResourcesManager resources_manager;
+
   // glfw: initialize and configure
   // ------------------------------
   glfwInit();
@@ -61,7 +61,9 @@ int main() {
   // ------------------------------------
   // vertex shader
   unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+  auto vertex_shader = resources_manager.GetFileSource("res/shaders/vertex.glsl");
+  auto vertex_shader_src = vertex_shader.c_str();
+  glShaderSource(vertexShader, 1, &vertex_shader_src, NULL);
   glCompileShader(vertexShader);
   // check for shader compile errors
   int success;

@@ -20,21 +20,22 @@ project(${PROJECT_NAME})
 
 find_package(OpenGL REQUIRED)
 
+add_subdirectory(src)
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glfw)
-
-add_definitions(-DGLFW_INCLUDE_NONE)
 
 add_executable(${PROJECT_NAME} main.cpp)
 
 target_include_directories(
   ${PROJECT_NAME} PRIVATE
+  src
   lib/glad/include/glad
   lib/glfw/include/GLFW
 )
 
 target_link_libraries(
   ${PROJECT_NAME}
+  flux-framework
   ${CMAKE_DL_LIBS}
   glad
   glfw
