@@ -48,9 +48,6 @@ set(
 
   src/entity.h
   src/engine.h src/engine.cpp
-
-  src/systems/window.h
-  src/components/window.h
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)

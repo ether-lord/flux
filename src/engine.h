@@ -2,10 +2,15 @@
 
 #include <unordered_map>
 
+#define GLFW_INCLUDE_NONE
 #include "entity.h"
-#include "systems/window.h"
+#include "glad.h"
+#include "glfw3.h"
 
 namespace flux::engine {
+
+void process_input(GLFWwindow *window);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
 class Engine {
  public:
@@ -20,8 +25,7 @@ class Engine {
   void InitGlad();
   void CreateWindow();
 
-  systems::Window window_system;
-  std::unordered_map<entity::ID, components::Window> windows;
+  GLFWwindow* window_;
 };
 
 }  // namespace flux::engine
