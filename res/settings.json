@@ -3,6 +3,9 @@
     "shader": {
       "location": "/res/shaders/",
       "default_ext": ".glsl"
+    },
+    "textures": {
+      "location": "/res/textures/"
     }
   }
 }

@@ -1,8 +1,10 @@
 #include <iostream>
 
+#define STB_IMAGE_IMPLEMENTATION
 #include "resources_manager.h"
 #include "shader.h"
 #include "shader_program.h"
+#include "stb_image.h"
 #include "system_manager.h"
 #include "types.h"
 
@@ -51,9 +53,6 @@ int main() {
     std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
               << shader_program.GetInfoLog() << std::endl;
   }
-
-  glDeleteShader(fragment_shader.GetId());
-  glDeleteShader(fragment_shader.GetId());
 
   float vertices[] = {
       0.5f,  0.5f,  0.0f,  // top right

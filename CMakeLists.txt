@@ -44,6 +44,7 @@ target_include_directories(
   lib/glad/include/glad
   lib/glfw/include/GLFW
   lib/json/include/nlohmann
+  lib/stb
 )
 
 target_link_libraries(

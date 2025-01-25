@@ -10,6 +10,8 @@ Shader::Shader(ShaderType type, const std::string& source)
   glShaderSource(id_, 1, &source_c_str, NULL);
 }
 
+Shader::~Shader() { glDeleteShader(id_); }
+
 void Shader::Compile() {
   glCompileShader(id_);
   glGetShaderiv(id_, GL_COMPILE_STATUS, &compile_status_);

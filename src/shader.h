@@ -16,6 +16,7 @@ enum class ShaderType {
 class Shader {
  public:
   explicit Shader(ShaderType type, const std::string& source);
+  ~Shader();
 
   void Compile();
   unsigned int GetId() const;
