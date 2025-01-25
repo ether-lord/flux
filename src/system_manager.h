@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "glad.h"
 #include "glfw3.h"
 #include "types.h"
@@ -10,12 +12,12 @@ static const int GLFW_VERSION_HINT_MAJOR = 4;
 static const int GLFW_VERSION_HINT_MINOR = 6;
 
 class SystemManager {
-  using Point2d = flux::types::Point2d;
+  using vec2 = glm::vec2;
 
  public:
   SystemManager();
 
-  Point2d GetPrimaryMonitorSize() const;
+  vec2 GetPrimaryMonitorSize() const;
   GLFWmonitor* GetPrimaryMonitor() const;
   GLFWwindow* GetWindow() const;
 
@@ -27,7 +29,7 @@ class SystemManager {
   GLFWwindow* window_;
   const GLFWvidmode* video_mode_;
 
-  Point2d monitor_size_;
+  vec2 monitor_size_;
 };
 
 }  // namespace flux::system

@@ -20,6 +20,16 @@ endif()
 
 project(${PROJECT_NAME})
 
+include(FetchContent)
+
+FetchContent_Declare(
+	glm
+	GIT_REPOSITORY	https://github.com/g-truc/glm.git
+	GIT_TAG 	bf71a834948186f4097caa076cd2663c69a10e1e #refs/tags/1.0.1
+)
+
+FetchContent_MakeAvailable(glm)
+
 find_package(OpenGL REQUIRED)
 
 add_subdirectory(lib/glad)
@@ -37,7 +47,6 @@ set(
 
 add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
 
-
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
   src
@@ -50,5 +59,5 @@ target_include_directories(
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC
   ${CMAKE_DL_LIBS} glad glfw OpenGL::GL
-  nlohmann_json::nlohmann_json
+  nlohmann_json::nlohmann_json glm::glm
 )

@@ -13,6 +13,8 @@ class ResourcesManager {
  public:
   ResourcesManager();
 
+  std::string GetAbsolutePath(const std::string& rel_path) const;
+  std::string GetPathToTexture(const std::string& name) const;
   std::string GetFileSource(const std::string& rel_path) const;
   std::string GetShaderSource(const std::string& name) const;
 
@@ -21,6 +23,7 @@ class ResourcesManager {
 
   std::string cwd_;
   std::string shaders_location_;
+  std::string textures_location_;
   std::string shaders_default_ext_;
 
   json settings_;

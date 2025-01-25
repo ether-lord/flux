@@ -1,6 +1,6 @@
 #include "system_manager.h"
 
-using flux::types::Point2d;
+using namespace glm;
 
 namespace flux::system {
 
@@ -10,7 +10,7 @@ SystemManager::SystemManager() {
   monitor_ = glfwGetPrimaryMonitor();
   video_mode_ = glfwGetVideoMode(monitor_);
 
-  monitor_size_ = Point2d(video_mode_->width, video_mode_->height);
+  monitor_size_ = vec2(video_mode_->width, video_mode_->height);
   window_ = glfwCreateWindow(monitor_size_.x, monitor_size_.y, "FLUX", monitor_,
                              NULL);
 
@@ -19,7 +19,7 @@ SystemManager::SystemManager() {
   InitGLAD();
 }
 
-Point2d SystemManager::GetPrimaryMonitorSize() const { return monitor_size_; }
+SystemManager::vec2 SystemManager::GetPrimaryMonitorSize() const { return monitor_size_; }
 
 GLFWmonitor* SystemManager::GetPrimaryMonitor() const { return monitor_; }
 

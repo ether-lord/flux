@@ -28,7 +28,21 @@ ResourcesManager::ResourcesManager() {
   }
 
   shaders_location_ = settings_["res"]["shader"]["location"];
+  textures_location_ = settings_["res"]["textures"]["location"];
   shaders_default_ext_ = settings_["res"]["shader"]["default_ext"];
+}
+
+string ResourcesManager::GetAbsolutePath(const std::string &rel_path) const {
+  string path(cwd_);
+
+  if (rel_path.front() != '/') path.append("/");
+  path.append(rel_path);
+
+  return path;
+}
+
+std::string ResourcesManager::GetPathToTexture(const std::string &name) const {
+  return string(cwd_).append(textures_location_).append(name);
 }
 
 string ResourcesManager::GetFileSource(const string &path) const {
