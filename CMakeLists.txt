@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.22)
 
 set(PROJECT_NAME flux)
 set(CMAKE_CXX_STANDARD 17)
@@ -23,12 +23,19 @@ project(${PROJECT_NAME})
 include(FetchContent)
 
 FetchContent_Declare(
-	glm
-	GIT_REPOSITORY	https://github.com/g-truc/glm.git
-	GIT_TAG 	bf71a834948186f4097caa076cd2663c69a10e1e #refs/tags/1.0.1
+  glm
+  GIT_REPOSITORY https://github.com/g-truc/glm.git
+  GIT_TAG bf71a834948186f4097caa076cd2663c69a10e1e
+)
+
+FetchContent_Declare(
+  assimp
+  GIT_REPOSITORY https://github.com/assimp/assimp.git
+  GIT_TAG v5.4.3
 )
 
 FetchContent_MakeAvailable(glm)
+FetchContent_MakeAvailable(assimp)
 
 find_package(OpenGL REQUIRED)
 
@@ -38,13 +45,18 @@ add_subdirectory(lib/json)
 
 set(
   ENGINE_SOURCES
-  src/resources_manager.cpp src/resources_manager.h
-  src/shader.cpp src/shader.h
-  src/shader_program.cpp src/shader_program.h
-  src/system_manager.cpp src/system_manager.h
-  src/types.cpp src/types.h
-  src/camera.cpp src/camera.h
+
+  src/entity.h
+  src/engine.h src/engine.cpp
+
+  src/systems/window.h
+  src/components/window.h
 )
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INJECT_DEBUG_POSTFIX OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 
 add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
 
@@ -60,5 +72,5 @@ target_include_directories(
 target_link_libraries(
   ${PROJECT_NAME} PUBLIC
   ${CMAKE_DL_LIBS} glad glfw OpenGL::GL
-  nlohmann_json::nlohmann_json glm::glm
+  nlohmann_json::nlohmann_json glm::glm assimp
 )
