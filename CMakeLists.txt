@@ -43,6 +43,7 @@ set(
   src/shader_program.cpp src/shader_program.h
   src/system_manager.cpp src/system_manager.h
   src/types.cpp src/types.h
+  src/camera.cpp src/camera.h
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
