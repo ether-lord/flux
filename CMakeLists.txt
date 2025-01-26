@@ -48,6 +48,16 @@ set(
 
   src/entity.h
   src/engine.h src/engine.cpp
+  src/resources_manager.h src/resources_manager.cpp
+  src/shader.h src/shader.cpp
+  src/shader_program.h src/shader_program.cpp
+
+  src/entity_manager.h src/entity_manager.cpp
+
+  src/systems/render.h src/systems/render.cpp
+
+  src/components/position.h
+  src/components/vertices.h
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -60,6 +70,8 @@ add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
   src
+  src/systems
+  src/components
   lib/glad/include/glad
   lib/glfw/include/GLFW
   lib/json/include/nlohmann

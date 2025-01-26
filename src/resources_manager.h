@@ -11,7 +11,7 @@ std::string get_file_source(const std::string& path);
 
 class ResourcesManager {
  public:
-  ResourcesManager();
+  static ResourcesManager& get();
 
   std::string GetAbsolutePath(const std::string& rel_path) const;
   std::string GetPathToTexture(const std::string& name) const;
@@ -19,6 +19,8 @@ class ResourcesManager {
   std::string GetShaderSource(const std::string& name) const;
 
  private:
+  ResourcesManager();
+
   const std::string settings_path_ = "/res/settings.json";
 
   std::string cwd_;

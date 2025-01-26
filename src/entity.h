@@ -3,13 +3,10 @@
 #include <cstdint>
 
 namespace flux::entity {
+using Id = std::uint64_t;
 
-using ID = std::uint64_t;
-
-static ID last_id = 0;
-
-inline ID CreateEntityId() {
-  return last_id++ % INT64_MAX;
-}
+struct Entity {
+  Id id;
+};
 
 }  // namespace flux::entity

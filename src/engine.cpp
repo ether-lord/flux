@@ -25,8 +25,10 @@ void Engine::Start() {
   while (is_running) {
     process_input(window_);
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.009f, 0.195f, 0.0126f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    render_system.Update();
 
     is_running = !glfwWindowShouldClose(window_);
 
@@ -45,8 +47,6 @@ void Engine::InitGlfw() {
 void Engine::InitGlad() { gladLoadGLLoader((GLADloadproc)glfwGetProcAddress); }
 
 void Engine::CreateWindow() {
-  auto id = entity::CreateEntityId();
-
   auto monitor = glfwGetPrimaryMonitor();
   auto video_mode = glfwGetVideoMode(monitor);
 

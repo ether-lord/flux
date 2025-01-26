@@ -32,6 +32,11 @@ ResourcesManager::ResourcesManager() {
   shaders_default_ext_ = settings_["res"]["shader"]["default_ext"];
 }
 
+ResourcesManager &ResourcesManager::get() {
+  static ResourcesManager instance;
+  return instance;
+}
+
 string ResourcesManager::GetAbsolutePath(const std::string &rel_path) const {
   string path(cwd_);
 
