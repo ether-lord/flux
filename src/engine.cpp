@@ -28,8 +28,6 @@ void Engine::Start() {
     glClearColor(0.009f, 0.195f, 0.0126f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    render_system.Update();
-
     is_running = !glfwWindowShouldClose(window_);
 
     glfwSwapBuffers(window_);

@@ -4,10 +4,8 @@
 
 #define GLFW_INCLUDE_NONE
 
-#include "entity.h"
 #include "glad.h"
 #include "glfw3.h"
-#include "systems/render.h"
 
 namespace flux::engine {
 
@@ -21,8 +19,6 @@ class Engine {
   void Start();
 
   bool is_running = false;
-
-  systems::Render render_system;
 
  private:
   void InitGlfw();
