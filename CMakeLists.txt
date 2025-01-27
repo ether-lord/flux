@@ -34,8 +34,14 @@ FetchContent_Declare(
   GIT_TAG v5.4.3
 )
 
+FetchContent_Declare(
+  flecs
+  GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
+)
+
 FetchContent_MakeAvailable(glm)
 FetchContent_MakeAvailable(assimp)
+FetchContent_MakeAvailable(flecs)
 
 find_package(OpenGL REQUIRED)
 
@@ -72,4 +78,5 @@ target_link_libraries(
   ${PROJECT_NAME} PUBLIC
   ${CMAKE_DL_LIBS} glad glfw OpenGL::GL
   nlohmann_json::nlohmann_json glm::glm assimp
+  flecs::flecs_static
 )
