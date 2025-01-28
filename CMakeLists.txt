@@ -56,7 +56,9 @@ set(
   src/shader.h src/shader.cpp
   src/shader_program.h src/shader_program.cpp
 
-  src/modules/
+  src/modules/render.cpp
+  src/modules/resources.cpp
+  src/components/
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -70,7 +72,6 @@ target_include_directories(
   ${PROJECT_NAME} PUBLIC
   src
   src/components
-  src/systems
   src/modules
   lib/glad/include/glad
   lib/glfw/include/GLFW

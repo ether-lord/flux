@@ -3,7 +3,9 @@
 
 #include "flecs.h"
 #include "glm/glm.hpp"
-#include "render2d.h"
+#include "graphics.h"
+#include "render.h"
+#include "resources.h"
 #include "resources_manager.h"
 #include "shader.h"
 #include "shader_program.h"
@@ -11,38 +13,18 @@
 using namespace std;
 using namespace flecs;
 using namespace glm;
-using namespace flux;
+
+using namespace flux::components;
 using namespace flux::shader;
 using namespace flux::resources;
 using namespace flux::modules;
 
-void process_input(GLFWwindow* window);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-
 int main() {
-  glfwInit();
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  auto monitor = glfwGetPrimaryMonitor();
-  auto video_mode = glfwGetVideoMode(monitor);
-
-  auto window = glfwCreateWindow(video_mode->width, video_mode->height, "FLUX",
-                                 monitor, NULL);
-
-  glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-  gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-
-  glEnable(GL_DEPTH_TEST);
-  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
   world game;
 
+  game.import <WindowPreProcessing>();
   game.import <Buffer2d>();
-  game.import <Render2d>();
+  game.import <Render>();
 
   auto triangle = game.entity("triangle").add<Shape2d>();
 
@@ -79,26 +61,13 @@ int main() {
   }
   // ===== Move to shader system =====
 
-  while (!glfwWindowShouldClose(window)) {
-    process_input(window);
-
-    glClearColor(0.009f, 0.195f, 0.0126f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+  auto window = game.get<Window>();
+  while (!glfwWindowShouldClose(window->ptr)) {
     game.progress();
 
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(window->ptr);
     glfwPollEvents();
   }
 
   return 0;
-}
-
-void process_input(GLFWwindow* window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, true);
-}
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-  glViewport(0, 0, width, height);
 }
