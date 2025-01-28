@@ -55,6 +55,8 @@ set(
   src/resources_manager.h src/resources_manager.cpp
   src/shader.h src/shader.cpp
   src/shader_program.h src/shader_program.cpp
+
+  src/modules/
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
@@ -67,6 +69,9 @@ add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
   src
+  src/components
+  src/systems
+  src/modules
   lib/glad/include/glad
   lib/glfw/include/GLFW
   lib/json/include/nlohmann
