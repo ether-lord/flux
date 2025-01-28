@@ -52,7 +52,6 @@ add_subdirectory(lib/json)
 set(
   ENGINE_SOURCES
 
-  src/engine.h src/engine.cpp
   src/resources_manager.h src/resources_manager.cpp
   src/shader.h src/shader.cpp
   src/shader_program.h src/shader_program.cpp
