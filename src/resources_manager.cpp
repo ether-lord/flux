@@ -38,7 +38,7 @@ ResourcesManager &ResourcesManager::get() {
 }
 
 string ResourcesManager::GetAbsolutePath(const std::string &rel_path) const {
-  string path(cwd_);
+  string path = cwd_;
 
   if (rel_path.front() != '/') path.append("/");
   path.append(rel_path);
@@ -47,19 +47,18 @@ string ResourcesManager::GetAbsolutePath(const std::string &rel_path) const {
 }
 
 std::string ResourcesManager::GetPathToTexture(const std::string &name) const {
-  return string(cwd_).append(textures_location_).append(name);
+  auto path = cwd_;
+  return path.append(textures_location_).append(name);
 }
 
 string ResourcesManager::GetFileSource(const string &path) const {
-  string file_path = cwd_;
-  file_path.append("/").append(path);
-
+  string file_path = GetAbsolutePath(path);
   return get_file_source(file_path);
 }
 
 std::string ResourcesManager::GetShaderSource(const std::string &name) const {
   string shader_path = shaders_location_ + name + shaders_default_ext_;
-  return this->GetFileSource(shader_path);
+  return GetFileSource(shader_path);
 }
 
 std::string get_file_source(const std::string &path) {

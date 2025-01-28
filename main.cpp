@@ -1,21 +1,19 @@
 #include <iostream>
 #include <vector>
 
+#include "components/shader.h"
 #include "flecs.h"
 #include "glm/glm.hpp"
 #include "graphics.h"
 #include "render.h"
 #include "resources.h"
 #include "resources_manager.h"
-#include "shader.h"
-#include "shader_program.h"
 
 using namespace std;
 using namespace flecs;
 using namespace glm;
 
 using namespace flux::components;
-using namespace flux::shader;
 using namespace flux::resources;
 using namespace flux::modules;
 
@@ -23,6 +21,7 @@ int main() {
   world game;
 
   game.import <WindowPreProcessing>();
+  game.import <ShaderLoader>();
   game.import <Buffer2d>();
   game.import <Render>();
 
@@ -36,30 +35,13 @@ int main() {
   triangle.set<Shape2d>(
       Shape2d{.vertices = vertices, .colors = colors, .indices = indices});
 
-  // ===== Move to shader system =====
-  auto shader_src = ResourcesManager::get().GetShaderSource("shape2d_vertex");
-  auto vertex_shader = Shader(ShaderType::VERTEX, shader_src);
-  vertex_shader.Compile();
-  if (!vertex_shader.GetCompileStatus()) {
-    cout << vertex_shader.GetInfoLog() << endl;
-  }
-  shader_src = ResourcesManager::get().GetShaderSource("shape2d_frag");
-  auto frag_shader = Shader(ShaderType::FRAGMENT, shader_src);
-  frag_shader.Compile();
-  if (!frag_shader.GetCompileStatus()) {
-    cout << frag_shader.GetInfoLog() << endl;
-  }
+  ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "shape2d_vertex"};
+  ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "shape2d_frag"};
+  ShaderData color_shader_data{{vertex_shader_info, frag_shader_info}};
 
-  auto shader_program = ShaderProgram();
-  shader_program.AttachShader(vertex_shader);
-  shader_program.AttachShader(frag_shader);
-  shader_program.Link();
-  shader_program.Use();
-
-  if (!shader_program.GetLinkStatus()) {
-    cout << shader_program.GetInfoLog() << endl;
-  }
-  // ===== Move to shader system =====
+  auto color_shader = game.entity("ColorShader");
+  color_shader.add<Shader>();
+  color_shader.set<ShaderData>(color_shader_data);
 
   auto window = game.get<Window>();
   while (!glfwWindowShouldClose(window->ptr)) {

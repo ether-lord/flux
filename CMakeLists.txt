@@ -52,13 +52,12 @@ add_subdirectory(lib/json)
 set(
   ENGINE_SOURCES
 
-  src/resources_manager.h src/resources_manager.cpp
-  src/shader.h src/shader.cpp
-  src/shader_program.h src/shader_program.cpp
+  src/resources_manager.cpp
+  src/shader.cpp
+  src/shader_program.cpp
 
   src/modules/render.cpp
   src/modules/resources.cpp
-  src/components/
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)

@@ -1,6 +1,7 @@
 #include "render.h"
 
-#include "graphics.h"
+#include "components/shader.h"
+#include "components/graphics.h"
 
 using namespace flux::components;
 
@@ -11,7 +12,10 @@ Render::Render(flecs::world& world) {
 
   world.system<const Shape2dBuffered>("Shape2dRenderer")
       .kind(flecs::OnStore)
-      .each([](const Shape2dBuffered& shape) {
+      .each([](flecs::iter& it, size_t, const Shape2dBuffered& shape) {
+        auto shader = it.world().lookup("ColorShader").get<Shader>();
+
+        glUseProgram(shader->id);
         glBindVertexArray(shape.vao);
         glDrawElements(GL_TRIANGLES, shape.edges, GL_UNSIGNED_INT, 0);
       });
