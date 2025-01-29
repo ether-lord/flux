@@ -2,6 +2,7 @@
 
 #include <glad.h>
 
+#include <functional>
 #include <iostream>
 
 #include "components/graphics.h"
@@ -15,11 +16,11 @@ using namespace flux::resources;
 namespace flux::modules {
 
 Buffer2d::Buffer2d(flecs::world& world) {
-  world.component<Shape2d>();
+  world.component<Shape2dData>();
 
-  world.system<Shape2d>()
+  world.system<Shape2dData>()
       .kind(flecs::OnLoad)
-      .each([](flecs::entity e, Shape2d& shape) {
+      .each([](flecs::entity e, Shape2dData& shape) {
         auto indices = shape.indices;
         auto colors = shape.colors;
         auto vertices = shape.vertices;
@@ -53,8 +54,8 @@ Buffer2d::Buffer2d(flecs::world& world) {
                               (void*)(sizeof(vertices[0]) * vertices.size()));
         glEnableVertexAttribArray(1);
 
-        e.remove<Shape2d>();
-        e.set<Shape2dBuffered>(Shape2dBuffered{vao, indices.size()});
+        e.remove<Shape2dData>();
+        e.set<Shape2d>(Shape2d{vao, indices.size()});
       });
 }
 
@@ -98,6 +99,73 @@ ShaderLoader::ShaderLoader(flecs::world& world) {
   world.system<Shader>("Shader linker")
       .kind(flecs::OnLoad)
       .each([](const Shader& shader) { glLinkProgram(shader.id); });
+}
+
+ModelLoader::ModelLoader(flecs::world& world) {
+  world.component<Mesh>();
+  world.component<MeshData>();
+  world.component<Model>();
+
+  world.system<Model>().kind(flecs::OnLoad).each([=](Model& model) {
+    auto model_path = ResourcesManager::get().GetAbsolutePath(model.path);
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(
+        model_path, aiProcess_Triangulate | aiProcess_FlipUVs);
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
+        !scene->mRootNode) {
+      // Handle errors;
+    }
+
+    std::function<void(aiNode * node, const aiScene* scene)> process_mesh =
+        [&](aiNode* node, const aiScene* scene) {
+
+        };
+
+    std::function<void(aiNode * node, const aiScene* scene)> process_node =
+        [&](aiNode* node, const aiScene* scene) {
+          for (auto i = 0; i < node->mNumMeshes; ++i) {
+            auto mesh = scene->mMeshes[node->mMeshes[i]];
+
+            vector<Vertex> vertices;
+            vector<unsigned int> indices;
+            vector<Texture> Textures;
+
+            for (auto i = 0; i < mesh->mNumVertices; ++i) {
+              Vertex vertex;
+
+              glm::vec3 pos;
+              pos.x = mesh->mVertices[i].x;
+              pos.y = mesh->mVertices[i].y;
+              pos.z = mesh->mVertices[i].z;
+              vertex.position = pos;
+
+              glm::vec3 normals;
+              normals.x = mesh->mNormals[i].x;
+              normals.y = mesh->mNormals[i].y;
+              normals.z = mesh->mNormals[i].z;
+              vertex.normal = normals;
+
+              if (mesh->mTextureCoords[0]) {
+                glm::vec2 uv;
+                uv.x = mesh->mTextureCoords[0][i].x;
+                uv.y = mesh->mTextureCoords[0][i].y;
+                vertex.uv = uv;
+              } else {
+                vertex.uv = glm::vec2(0.0f, 0.0f);
+              }
+
+              vertices.push_back(vertex);
+            }
+          }
+
+          for (auto i = 0; i < node->mNumChildren; ++i) {
+            process_node(node->mChildren[i], scene);
+          }
+        };
+
+    process_node(scene->mRootNode, scene);
+  });
 }
 
 }  // namespace flux::modules

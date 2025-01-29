@@ -23,17 +23,18 @@ int main() {
   game.import <WindowPreProcessing>();
   game.import <ShaderLoader>();
   game.import <Buffer2d>();
+  game.import <ModelLoader>();
   game.import <Render>();
 
-  auto triangle = game.entity("triangle").add<Shape2d>();
+  auto triangle = game.entity("triangle").add<Shape2dData>();
 
   std::vector<glm::vec3> vertices = {
       {-0.5f, -0.5f, 0.f}, {0.0f, 0.5f, 0.f}, {0.5f, -0.5f, 0.f}};
   std::vector<glm::vec3> colors = {{0, 0, 1}, {0, 1, 0}, {1, 0, 0}};
   std::vector<unsigned int> indices = {0, 1, 2};
 
-  triangle.set<Shape2d>(
-      Shape2d{.vertices = vertices, .colors = colors, .indices = indices});
+  triangle.set<Shape2dData>(
+      Shape2dData{.vertices = vertices, .colors = colors, .indices = indices});
 
   ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "shape2d_vertex"};
   ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "shape2d_frag"};

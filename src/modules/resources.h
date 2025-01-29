@@ -1,6 +1,9 @@
 #pragma once
 
 #include <flecs.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 namespace flux::modules {
 
@@ -12,6 +15,10 @@ struct Buffer2d {
 
 struct ShaderLoader {
   ShaderLoader(flecs::world& world);
+};
+
+struct ModelLoader {
+  ModelLoader(flecs::world& world);
 };
 
 }  // namespace flux::modules

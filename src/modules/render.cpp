@@ -8,16 +8,16 @@ using namespace flux::components;
 namespace flux::modules {
 
 Render::Render(flecs::world& world) {
-  world.component<Shape2dBuffered>();
+  world.component<Shape2d>();
 
-  world.system<const Shape2dBuffered>("Shape2dRenderer")
+  world.system<const Shape2d>("Shape2dRenderer")
       .kind(flecs::OnStore)
-      .each([](flecs::iter& it, size_t, const Shape2dBuffered& shape) {
+      .each([](flecs::iter& it, size_t, const Shape2d& shape) {
         auto shader = it.world().lookup("ColorShader").get<Shader>();
 
         glUseProgram(shader->id);
         glBindVertexArray(shape.vao);
-        glDrawElements(GL_TRIANGLES, shape.edges, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, shape.vertices, GL_UNSIGNED_INT, 0);
       });
 }
 
