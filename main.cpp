@@ -1,15 +1,19 @@
 #include <flecs.h>
 
+#define GLFW_INCLUDE_NONE
+
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
 
+#include "components/graphics.h"
+#include "components/input.h"
 #include "components/shader.h"
-#include "graphics.h"
-#include "render.h"
-#include "resources.h"
+#include "modules/input.h"
+#include "modules/render.h"
+#include "modules/resources.h"
 #include "resources_manager.h"
 
 using namespace std;
@@ -27,6 +31,7 @@ int main() {
   game.import <ShaderLoader>();
   game.import <TextureLoader>();
   game.import <Buffering>();
+  game.import <InputSystem>();
   game.import <Render>();
 
   Mesh square_data;
@@ -34,8 +39,7 @@ int main() {
       Vertex{.position{-0.5f, 0.5f, 0.f}, .uv = {0.f, 1.f}},
       Vertex{.position{0.5f, 0.5f, 0.f}, .uv = {1.f, 1.f}},
       Vertex{.position{0.5f, -0.5f, 0.f}, .uv = {1.f, 0.f}},
-      Vertex{.position{-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}
-      };
+      Vertex{.position{-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}};
   square_data.indices = {0, 1, 2, 2, 3, 0};
 
   Transform transform = {.position = {1.f, 0.f, 0.f},
@@ -55,6 +59,7 @@ int main() {
   shader.set<ShaderData>(shader_data);
 
   auto window = game.get<Window>();
+  game.entity<Window>().add<InputHandler>();
 
   mat4 projection = mat4(1.0f);
   projection =

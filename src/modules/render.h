@@ -9,11 +9,6 @@
 
 namespace flux::modules {
 
-struct Window {
-  GLFWwindow* ptr;
-  const GLFWvidmode* video_mode;
-};
-
 struct Render {
   Render(flecs::world& world);
 };
@@ -22,7 +17,6 @@ struct WindowPreProcessing {
   WindowPreProcessing(flecs::world& world);
 };
 
-void process_input(GLFWwindow* window);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 }  // namespace flux::modules

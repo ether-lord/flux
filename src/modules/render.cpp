@@ -4,6 +4,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include "components/graphics.h"
+#include "components/input.h"
 #include "components/shader.h"
 
 using namespace glm;
@@ -19,7 +20,7 @@ Render::Render(flecs::world& world) {
   camera.speed = 2.5f;
   camera.zoom = 45.f;
   camera.sensitivity = 0.1f;
-  
+
   world.set<Camera>(camera);
 
   world
@@ -42,7 +43,8 @@ Render::Render(flecs::world& world) {
         glUseProgram(shader->id);
         int model_loc = glGetUniformLocation(shader->id, "model");
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, value_ptr(model));
-        auto view = lookAt(camera->position, camera->position + camera->target, camera->up);
+        auto view = lookAt(camera->position, camera->position + camera->target,
+                           camera->up);
         int view_loc = glGetUniformLocation(shader->id, "view");
         glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
         int projection_loc = glGetUniformLocation(shader->id, "projection");
@@ -78,16 +80,24 @@ WindowPreProcessing::WindowPreProcessing(flecs::world& world) {
   world.set<Window>(Window{glfw_window, video_mode});
 
   world.system<Window>().kind(flecs::OnLoad).each([=](Window& window) {
-    process_input(window.ptr);
-
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   });
-}
 
-void process_input(GLFWwindow* window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, true);
+  world.system<Window, const Input>()
+      .kind(flecs::PostLoad)
+      .each([](flecs::entity e, Window& window, const Input& input) {
+        switch (input.key) {
+          case KeyboardKey::kEscape:
+            glfwSetWindowShouldClose(window.ptr,
+                                     input.state == KeyState::kPressed);
+            break;
+          default:
+            break;
+        }
+
+        e.remove<Input>();
+      });
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {

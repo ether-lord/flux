@@ -3,8 +3,14 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <glfw3.h>
 
 namespace flux::components {
+
+struct Window {
+  GLFWwindow* ptr;
+  const GLFWvidmode* video_mode;
+};
 
 struct Shape2d {
   unsigned int vao;

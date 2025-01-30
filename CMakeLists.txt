@@ -58,6 +58,7 @@ set(
 
   src/modules/render.cpp
   src/modules/resources.cpp
+  src/modules/input.cpp
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
