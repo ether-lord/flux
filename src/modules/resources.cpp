@@ -70,6 +70,7 @@ TextureLoader::TextureLoader(flecs::world& world) {
         auto texture_path =
             ResourcesManager::get().GetPathToTexture(texture_data.name);
 
+        stbi_set_flip_vertically_on_load(true);  
         int width, height, nr_channels;
         unsigned char* data =
             stbi_load(texture_path.c_str(), &width, &height, &nr_channels, 0);

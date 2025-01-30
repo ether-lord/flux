@@ -11,7 +11,7 @@ namespace flux::modules {
 
 struct Window {
   GLFWwindow* ptr;
-  bool should_close = false;
+  const GLFWvidmode* video_mode;
 };
 
 struct Render {

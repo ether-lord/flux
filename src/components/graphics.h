@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace flux::components {
 
@@ -30,7 +30,7 @@ struct TextureBuffer {
   unsigned int id;
 };
 
-struct Mesh  {
+struct Mesh {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;
 };
@@ -40,9 +40,32 @@ struct MeshBuffer {
   unsigned int indices;
 };
 
-struct Model {
-  std::vector<MeshBuffer> meshes;
-  std::string path;
+struct Transform {
+  glm::vec3 position;
+  glm::vec3 rotation;
+  glm::vec3 scale{1.f, 1.f, 1.f};
+};
+
+struct Projection {
+  glm::mat4 matirx;
+};
+
+struct View {
+  glm::mat4 matrix;
+};
+
+struct Camera {
+  glm::vec3 position{0.f, 0.f, 3.f};
+  glm::vec3 target{0.f, 0.f, -1.f};
+  glm::vec3 up{0.f, 1.f, 0.f};
+  glm::vec3 right;
+  glm::vec3 world_up{0.f, 1.f, 0.f};
+
+  float pitch;
+  float yaw;
+  float speed;
+  float sensitivity;
+  float zoom;
 };
 
 }  // namespace flux::components

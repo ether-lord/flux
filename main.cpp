@@ -1,9 +1,12 @@
+#include <flecs.h>
+
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
 
 #include "components/shader.h"
-#include "flecs.h"
-#include "glm/glm.hpp"
 #include "graphics.h"
 #include "render.h"
 #include "resources.h"
@@ -31,12 +34,17 @@ int main() {
       Vertex{.position{-0.5f, 0.5f, 0.f}, .uv = {0.f, 1.f}},
       Vertex{.position{0.5f, 0.5f, 0.f}, .uv = {1.f, 1.f}},
       Vertex{.position{0.5f, -0.5f, 0.f}, .uv = {1.f, 0.f}},
-      Vertex{.position{-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}};
+      Vertex{.position{-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}
+      };
   square_data.indices = {0, 1, 2, 2, 3, 0};
+
+  Transform transform = {.position = {1.f, 0.f, 0.f},
+                         .rotation = {90.f, 90.f, 0.f}};
 
   auto square = game.entity("Square");
   square.set<Mesh>(square_data);
   square.set<Texture>({"container.jpg"});
+  square.set<Transform>(transform);
 
   ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "vertex"};
   ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "fragment"};
@@ -47,6 +55,14 @@ int main() {
   shader.set<ShaderData>(shader_data);
 
   auto window = game.get<Window>();
+
+  mat4 projection = mat4(1.0f);
+  projection =
+      perspective(radians(45.0f),
+                  (float)window->video_mode->width / window->video_mode->height,
+                  0.1f, 100.0f);
+  game.set<Projection>({projection});
+
   while (!glfwWindowShouldClose(window->ptr)) {
     game.progress();
 
