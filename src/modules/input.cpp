@@ -17,6 +17,8 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
 };
 
 InputSystem::InputSystem(flecs::world& world) {
+  glfwSetInputMode(world.get<Window>()->ptr, GLFW_STICKY_KEYS, GLFW_TRUE);
+
   world.component<Input>();
   world.component<InputHandler>();
 
@@ -24,8 +26,11 @@ InputSystem::InputSystem(flecs::world& world) {
       .kind(flecs::PostLoad)
       .each([](flecs::entity e, const InputHandler& handler) {
         auto window = e.world().get<Window>();
+
         if (glfwGetKey(window->ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS)
           e.set<Input>({KeyboardKey::kEscape, KeyState::kPressed});
+        if (glfwGetKey(window->ptr, GLFW_KEY_W) == GLFW_PRESS)
+          e.set<Input>({KeyboardKey::kKeyW, KeyState::kPressed});
       });
 }
 

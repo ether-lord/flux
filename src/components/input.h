@@ -9,7 +9,8 @@ enum class KeyState {
 };
 
 enum class KeyboardKey {
-  kEscape = GLFW_KEY_ESCAPE
+  kEscape = GLFW_KEY_ESCAPE,
+  kKeyW = GLFW_KEY_W
 };
 
 struct InputHandler {};

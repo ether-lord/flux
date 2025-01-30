@@ -2,41 +2,38 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
+#include <iostream>
 
 #include "components/graphics.h"
 #include "components/input.h"
 #include "components/shader.h"
 
 using namespace glm;
+using namespace std;
 
 using namespace flux::components;
 
 namespace flux::modules {
 
 Render::Render(flecs::world& world) {
-  Camera camera;
-  camera.yaw = -90.f;
-  camera.pitch = 0.f;
-  camera.speed = 2.5f;
-  camera.zoom = 45.f;
-  camera.sensitivity = 0.1f;
-
-  world.set<Camera>(camera);
-
   world
       .system<const MeshBuffer, const TextureBuffer, const Transform>(
           "MeshRenderer")
       .kind(flecs::OnStore)
       .each([](flecs::iter& it, size_t, const MeshBuffer& mesh,
                const TextureBuffer& texture, const Transform& transform) {
-        auto shader = it.world().lookup("BasicShader").get<Shader>();
-        auto camera = it.world().get<Camera>();
+        auto shader = it.world().entity("BasicShader").get<Shader>();
+        auto camera = it.world().get<FlyCamera>();
         auto projection = it.world().get<Projection>();
+
+        glBindVertexArray(mesh.vao);
+
+        cout << shader->id << endl;
 
         auto model = mat4(1.f);
         model = translate(model, transform.position);
         model = scale(model, transform.scale);
-        model = rotate(model, radians(transform.rotation.x), {1.f, 0.f, 0.f});
+        model = rotate(model, radians((float)glfwGetTime()), {1.f, 0.f, 0.f});
         model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
         model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
@@ -52,7 +49,6 @@ Render::Render(flecs::world& world) {
                            value_ptr(projection->matirx));
 
         glBindTexture(GL_TEXTURE_2D, texture.id);
-        glBindVertexArray(mesh.vao);
         glDrawElements(GL_TRIANGLES, mesh.indices, GL_UNSIGNED_INT, 0);
       });
 }

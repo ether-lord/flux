@@ -22,14 +22,11 @@ ShaderLoader::ShaderLoader(flecs::world& world) {
   world.component<ShaderData>();
   world.component<Shader>();
 
-  world.system<Shader>("Shader program initializer")
-      .kind(flecs::OnLoad)
-      .each([](Shader& shader) { shader.id = glCreateProgram(); });
-
   world.system<Shader, const ShaderData>("Shader data loader")
       .kind(flecs::OnLoad)
       .each([](flecs::entity e, Shader& shader_program,
                const ShaderData& shader_data) {
+        shader_program.id = glCreateProgram();
         for (const auto& shader : shader_data.data) {
           auto shader_source =
               ResourcesManager::get().GetShaderSource(shader.name);
@@ -52,12 +49,9 @@ ShaderLoader::ShaderLoader(flecs::world& world) {
           glAttachShader(shader_program.id, shader_id);
         }
 
+        glLinkProgram(shader_program.id);
         e.remove<ShaderData>();
       });
-
-  world.system<Shader>("Shader linker")
-      .kind(flecs::OnLoad)
-      .each([](const Shader& shader) { glLinkProgram(shader.id); });
 }
 
 TextureLoader::TextureLoader(flecs::world& world) {
@@ -70,7 +64,7 @@ TextureLoader::TextureLoader(flecs::world& world) {
         auto texture_path =
             ResourcesManager::get().GetPathToTexture(texture_data.name);
 
-        stbi_set_flip_vertically_on_load(true);  
+        stbi_set_flip_vertically_on_load(true);
         int width, height, nr_channels;
         unsigned char* data =
             stbi_load(texture_path.c_str(), &width, &height, &nr_channels, 0);
@@ -131,13 +125,16 @@ Buffering::Buffering(flecs::world& world) {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                      sizeof(indices[0]) * indices.size(), &indices[0],
                      GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                              (void*)0);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                              (void*)offsetof(Vertex, uv));
         glEnableVertexAttribArray(1);
 
         e.remove<Mesh>();
-        e.set<MeshBuffer>(MeshBuffer{.vao = vao, .indices = (unsigned int)indices.size()});
+        e.set<MeshBuffer>(
+            MeshBuffer{.vao = vao, .indices = (unsigned int)indices.size()});
       });
 }
 

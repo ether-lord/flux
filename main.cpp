@@ -14,6 +14,7 @@
 #include "modules/input.h"
 #include "modules/render.h"
 #include "modules/resources.h"
+#include "modules/camera.h"
 #include "resources_manager.h"
 
 using namespace std;
@@ -32,6 +33,7 @@ int main() {
   game.import <TextureLoader>();
   game.import <Buffering>();
   game.import <InputSystem>();
+  game.import <Camera>();
   game.import <Render>();
 
   Mesh square_data;

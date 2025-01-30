@@ -60,7 +60,7 @@ struct View {
   glm::mat4 matrix;
 };
 
-struct Camera {
+struct FlyCamera {
   glm::vec3 position{0.f, 0.f, 3.f};
   glm::vec3 target{0.f, 0.f, -1.f};
   glm::vec3 up{0.f, 1.f, 0.f};
