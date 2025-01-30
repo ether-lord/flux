@@ -1,7 +1,7 @@
 #include "render.h"
 
-#include "components/shader.h"
 #include "components/graphics.h"
+#include "components/shader.h"
 
 using namespace flux::components;
 
@@ -18,6 +18,18 @@ Render::Render(flecs::world& world) {
         glUseProgram(shader->id);
         glBindVertexArray(shape.vao);
         glDrawElements(GL_TRIANGLES, shape.vertices, GL_UNSIGNED_INT, 0);
+      });
+
+  world.system<const MeshBuffer, const TextureBuffer>("MeshRenderer")
+      .kind(flecs::OnStore)
+      .each([](flecs::iter& it, size_t, const MeshBuffer& mesh,
+               const TextureBuffer& texture) {
+        auto shader = it.world().lookup("BasicShader").get<Shader>();
+
+        glUseProgram(shader->id);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
+        glBindVertexArray(mesh.vao);
+        glDrawElements(GL_TRIANGLES, mesh.indices, GL_UNSIGNED_INT, 0);
       });
 }
 

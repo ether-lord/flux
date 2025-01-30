@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <string>
 
 namespace flux::components {
 
@@ -18,28 +19,29 @@ struct Shape2dData {
 
 struct Vertex {
   glm::vec3 position;
-  glm::vec3 normal;
   glm::vec2 uv;
 };
 
 struct Texture {
-  unsigned int id;
   std::string name;
 };
 
-struct MeshData  {
-  std::vector<Vertex> vertices;
-  std::vector<unsigned int> indices;
-  Texture texture;
+struct TextureBuffer {
+  unsigned int id;
 };
 
-struct Mesh {
+struct Mesh  {
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+};
+
+struct MeshBuffer {
   unsigned int vao;
-  unsigned int texture_id;
+  unsigned int indices;
 };
 
 struct Model {
-  std::vector<Mesh> meshes;
+  std::vector<MeshBuffer> meshes;
   std::string path;
 };
 

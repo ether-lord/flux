@@ -22,27 +22,29 @@ int main() {
 
   game.import <WindowPreProcessing>();
   game.import <ShaderLoader>();
-  game.import <Buffer2d>();
-  game.import <ModelLoader>();
+  game.import <TextureLoader>();
+  game.import <Buffering>();
   game.import <Render>();
 
-  auto triangle = game.entity("triangle").add<Shape2dData>();
+  Mesh square_data;
+  square_data.vertices = {
+      Vertex{.position{-0.5f, 0.5f, 0.f}, .uv = {0.f, 1.f}},
+      Vertex{.position{0.5f, 0.5f, 0.f}, .uv = {1.f, 1.f}},
+      Vertex{.position{0.5f, -0.5f, 0.f}, .uv = {1.f, 0.f}},
+      Vertex{.position{-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}};
+  square_data.indices = {0, 1, 2, 2, 3, 0};
 
-  std::vector<glm::vec3> vertices = {
-      {-0.5f, -0.5f, 0.f}, {0.0f, 0.5f, 0.f}, {0.5f, -0.5f, 0.f}};
-  std::vector<glm::vec3> colors = {{0, 0, 1}, {0, 1, 0}, {1, 0, 0}};
-  std::vector<unsigned int> indices = {0, 1, 2};
+  auto square = game.entity("Square");
+  square.set<Mesh>(square_data);
+  square.set<Texture>({"container.jpg"});
 
-  triangle.set<Shape2dData>(
-      Shape2dData{.vertices = vertices, .colors = colors, .indices = indices});
+  ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "vertex"};
+  ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "fragment"};
+  ShaderData shader_data{{vertex_shader_info, frag_shader_info}};
 
-  ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "shape2d_vertex"};
-  ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "shape2d_frag"};
-  ShaderData color_shader_data{{vertex_shader_info, frag_shader_info}};
-
-  auto color_shader = game.entity("ColorShader");
-  color_shader.add<Shader>();
-  color_shader.set<ShaderData>(color_shader_data);
+  auto shader = game.entity("BasicShader");
+  shader.add<Shader>();
+  shader.set<ShaderData>(shader_data);
 
   auto window = game.get<Window>();
   while (!glfwWindowShouldClose(window->ptr)) {
