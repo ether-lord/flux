@@ -28,8 +28,6 @@ Render::Render(flecs::world& world) {
 
         glBindVertexArray(mesh.vao);
 
-        cout << shader->id << endl;
-
         auto model = mat4(1.f);
         model = translate(model, transform.position);
         model = scale(model, transform.scale);
@@ -80,19 +78,15 @@ WindowPreProcessing::WindowPreProcessing(flecs::world& world) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   });
 
-  world.system<Window, const Input>()
+  world.system<Window, const InputHandler>()
       .kind(flecs::PostLoad)
-      .each([](flecs::entity e, Window& window, const Input& input) {
-        switch (input.key) {
-          case KeyboardKey::kEscape:
-            glfwSetWindowShouldClose(window.ptr,
-                                     input.state == KeyState::kPressed);
-            break;
-          default:
-            break;
-        }
+      .each([](flecs::entity e, Window& window, const InputHandler& input) {
+        auto keyboard_events = e.world().get<Input>()->keyboard_events;
 
-        e.remove<Input>();
+        if (keyboard_events.count(KeyboardKey::kEscape))
+          glfwSetWindowShouldClose(
+              window.ptr,
+              keyboard_events[KeyboardKey::kEscape] == KeyState::kReleased);
       });
 }
 

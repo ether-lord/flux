@@ -37,6 +37,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   flecs
   GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
+  GIT_TAG 41a14e2dd41c2ff2092cc8512ab1a35f93f6d9fd
 )
 
 FetchContent_MakeAvailable(glm)

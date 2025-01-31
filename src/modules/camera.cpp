@@ -18,13 +18,10 @@ Camera::Camera(flecs::world& world) {
   world.set<FlyCamera>(camera);
   world.entity<FlyCamera>().add<InputHandler>();
 
-  world.system<FlyCamera, const Input>()
+  world.system<FlyCamera, const InputHandler>()
       .kind(flecs::PostLoad)
-      .each([](flecs::entity e, FlyCamera& camera, const Input& input) {
-        if (input.key == KeyboardKey::kKeyW && input.state == KeyState::kPressed)
-          camera.position.z -= camera.speed * e.world().delta_time();
-
-        e.remove<Input>();
+      .each([](flecs::entity e, FlyCamera& camera, const InputHandler& input) {
+        
       });
 }
 

@@ -74,7 +74,6 @@ int main() {
     game.progress();
 
     glfwSwapBuffers(window->ptr);
-    glfwPollEvents();
   }
 
   return 0;

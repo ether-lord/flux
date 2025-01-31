@@ -3,35 +3,36 @@
 #include <glfw3.h>
 
 #include <functional>
+#include <iostream>
+#include <unordered_map>
 
 #include "components/graphics.h"
 #include "components/input.h"
 
+using namespace std;
 using namespace flux::components;
 
 namespace flux::modules {
 
+static std::unordered_map<KeyboardKey, KeyState> keyboard_events;
+
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
                  int mods) {
-
+  keyboard_events[static_cast<KeyboardKey>(key)] =
+      static_cast<KeyState>(action);
 };
 
 InputSystem::InputSystem(flecs::world& world) {
-  glfwSetInputMode(world.get<Window>()->ptr, GLFW_STICKY_KEYS, GLFW_TRUE);
+  glfwSetKeyCallback(world.get<Window>()->ptr, KeyCallback);
 
-  world.component<Input>();
   world.component<InputHandler>();
+  world.set<Input>({keyboard_events});
 
-  world.system<const InputHandler>()
-      .kind(flecs::PostLoad)
-      .each([](flecs::entity e, const InputHandler& handler) {
-        auto window = e.world().get<Window>();
-
-        if (glfwGetKey(window->ptr, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-          e.set<Input>({KeyboardKey::kEscape, KeyState::kPressed});
-        if (glfwGetKey(window->ptr, GLFW_KEY_W) == GLFW_PRESS)
-          e.set<Input>({KeyboardKey::kKeyW, KeyState::kPressed});
-      });
+  world.system<Input>().kind(flecs::PostLoad).each([](Input& input) {
+    glfwPollEvents();
+    input.keyboard_events = keyboard_events;
+    keyboard_events.clear();
+  });
 }
 
 }  // namespace flux::modules
