@@ -15,11 +15,11 @@ using namespace flux::components;
 
 namespace flux::modules {
 
-struct MousePosition {
-  float x, y;
-};
+static bool first_mouse_callback = true;
 
-static MousePosition mouse_position = {0, 0};
+static glm::vec2 mouse_position = {0.f, 0.f};
+static glm::vec2 mouse_offset = {0.f, 0.f};
+
 static float mouse_sensitivity = 0.1f;
 
 static std::unordered_map<KeyboardKey, KeyState> keyboard_events;
@@ -31,17 +31,27 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
 };
 
 void MouseCallback(GLFWwindow* window, double mouse_x, double mouse_y) {
-  float offset_x = mouse_x - mouse_position.x;
-  float offset_y = mouse_y - mouse_position.y;
+  if (first_mouse_callback) {
+    first_mouse_callback = false;
+    return;
+  }
 
-  mouse_position = {.x = static_cast<float>(mouse_x),
-                    .y = static_cast<float>(mouse_y)};
+  float offset_x = mouse_x - mouse_position.x;
+  float offset_y = mouse_position.y - mouse_y;
+
+  offset_x *= mouse_sensitivity;
+  offset_y *= mouse_sensitivity;
+
+  mouse_offset = {offset_x, offset_y};
+
+  mouse_position = {static_cast<float>(mouse_x), static_cast<float>(mouse_y)};
 };
 
 InputHandling::InputHandling(flecs::world& world) {
   auto window = world.get<Window>();
   glfwSetKeyCallback(window->ptr, KeyCallback);
   glfwSetCursorPosCallback(window->ptr, MouseCallback);
+
   mouse_position = {window->video_mode->width / 2.f,
                     window->video_mode->height / 2.f};
 
@@ -53,7 +63,9 @@ InputHandling::InputHandling(flecs::world& world) {
       .each([](Input& input) {
         glfwPollEvents();
         input.keyboard_events = keyboard_events;
+        input.mouse_offset = mouse_offset;
         keyboard_events.clear();
+        mouse_offset = glm::vec2{0.f, 0.f};
       });
 
   world.system<Window, const InputTarget>("Window input system")
@@ -64,7 +76,6 @@ InputHandling::InputHandling(flecs::world& world) {
           glfwSetWindowShouldClose(window.ptr, true);
         }
       });
-
 }
 
 }  // namespace flux::modules

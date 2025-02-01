@@ -20,8 +20,7 @@ struct InputTarget { };
 
 struct Input {
   std::unordered_map<KeyboardKey, KeyState> keyboard_events;
-  float mouse_x;
-  float mouse_y;
+  glm::vec2 mouse_offset;
 };
 
 }  // namespace flux::components

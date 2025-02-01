@@ -1,10 +1,13 @@
 #include "camera.h"
 
+#include <iostream>
+
 #include "components/graphics.h"
 #include "components/input.h"
 #include "components/movement.h"
 
 using namespace flux::components;
+using namespace glm;
 
 namespace flux::modules {
 
@@ -27,32 +30,54 @@ Camera::Camera(flecs::world& world) {
                const InputTarget&) {
         auto key_inputs = e.world().get<Input>()->keyboard_events;
 
+        vec3 direction_vector{direction.x, direction.y, direction.z};
+
         for (auto [key, state] : key_inputs) {
           switch (state) {
             case KeyState::kPressed:
               if (key == KeyboardKey::kKeyW)
-                direction.z += -1.f;
+                direction_vector += camera.target;
               else if (key == KeyboardKey::kKeyS)
-                direction.z += 1.f;
+                direction_vector -= camera.target;
               else if (key == KeyboardKey::kKeyD)
-                direction.x += 1.f;
+                direction_vector += camera.right;
               else if (key == KeyboardKey::kKeyA)
-                direction.x += -1.f;
+                direction_vector -= camera.right;
               break;
             case KeyState::kReleased:
               if (key == KeyboardKey::kKeyW)
-                direction.z -= -1.f;
+                direction_vector -= camera.target;
               else if (key == KeyboardKey::kKeyS)
-                direction.z -= 1.f;
+                direction_vector += camera.target;
               else if (key == KeyboardKey::kKeyD)
-                direction.x -= 1.f;
+                direction_vector -= camera.right;
               else if (key == KeyboardKey::kKeyA)
-                direction.x -= -1.f;
+                direction_vector += camera.right;
               break;
             default:
               break;
           }
         }
+
+        direction.x = direction_vector.x;
+        direction.y = direction_vector.y;
+        direction.z = direction_vector.z;
+
+        auto mouse_offset = e.world().get<Input>()->mouse_offset;
+
+        camera.yaw += mouse_offset.x;
+        camera.pitch += mouse_offset.y;
+
+        if (camera.pitch > 89.9f) camera.pitch = 89.9f;
+        if (camera.pitch < -89.9f) camera.pitch = -89.9f;
+
+        vec3 target;
+        target.x = cos(radians(camera.yaw)) * cos(radians(camera.pitch));
+        target.y = sin(radians(camera.pitch));
+        target.z = sin(radians(camera.yaw)) * cos(radians(camera.pitch));
+        camera.target = normalize(target);
+
+        camera.right = normalize(cross(camera.target, camera.up));
       });
 }
 
