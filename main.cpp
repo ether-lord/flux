@@ -11,28 +11,33 @@
 #include "components/graphics.h"
 #include "components/input.h"
 #include "components/shader.h"
+#include "modules/camera.h"
 #include "modules/input.h"
+#include "modules/movement.h"
 #include "modules/render.h"
 #include "modules/resources.h"
-#include "modules/camera.h"
-#include "resources_manager.h"
 
 using namespace std;
 using namespace flecs;
 using namespace glm;
 
 using namespace flux::components;
-using namespace flux::resources;
 using namespace flux::modules;
 
 int main() {
   world game;
 
+  game.import <flecs::stats>();
+
+  // Creates REST server on default port (27750)
+  game.set<flecs::Rest>({});
+
   game.import <WindowPreProcessing>();
   game.import <ShaderLoader>();
   game.import <TextureLoader>();
   game.import <Buffering>();
-  game.import <InputSystem>();
+  game.import <InputHandling>();
+  game.import <Movement>();
   game.import <Camera>();
   game.import <Render>();
 
@@ -45,7 +50,7 @@ int main() {
   square_data.indices = {0, 1, 2, 2, 3, 0};
 
   Transform transform = {.position = {1.f, 0.f, 0.f},
-                         .rotation = {90.f, 90.f, 0.f}};
+                         .rotation = {90.f, 0.f, 0.f}};
 
   auto square = game.entity("Square");
   square.set<Mesh>(square_data);

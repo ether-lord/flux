@@ -4,8 +4,8 @@
 
 namespace flux::modules {
 
-struct InputSystem {
-  InputSystem(flecs::world& world);
+struct InputHandling {
+  InputHandling(flecs::world& world);
 };
 
 } // namespace flux::modules

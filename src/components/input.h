@@ -14,7 +14,7 @@ enum class KeyboardKey {
   kKeyS = GLFW_KEY_S
 };
 
-struct InputHandler {};
+struct InputHandler { };
 
 struct Input {
   std::unordered_map<KeyboardKey, KeyState> keyboard_events;

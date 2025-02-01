@@ -13,7 +13,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     -fsanitize=float-divide-by-zero
     -fsanitize=float-cast-overflow
     -fno-sanitize=null
-    -fno-sanitize=alignment)
+    -fno-sanitize=alignment
+    -Ofast)
   add_compile_options(-fsanitize=address, -lasan, -fsanitize=undefined)
   add_link_options(-fsanitize=address, -fsanitize=undefined)
 endif()
@@ -61,6 +62,7 @@ set(
   src/modules/resources.cpp
   src/modules/input.cpp
   src/modules/camera.cpp
+  src/modules/movement.cpp
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)

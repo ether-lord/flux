@@ -61,7 +61,6 @@ struct View {
 };
 
 struct FlyCamera {
-  glm::vec3 position{0.f, 0.f, 3.f};
   glm::vec3 target{0.f, 0.f, -1.f};
   glm::vec3 up{0.f, 1.f, 0.f};
   glm::vec3 right;
@@ -69,7 +68,6 @@ struct FlyCamera {
 
   float pitch;
   float yaw;
-  float speed;
   float sensitivity;
   float zoom;
 };

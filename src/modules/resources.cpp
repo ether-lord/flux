@@ -58,7 +58,7 @@ TextureLoader::TextureLoader(flecs::world& world) {
   world.component<Texture>();
   world.component<TextureBuffer>();
 
-  world.system<const Texture>()
+  world.system<const Texture>("Texture Loader")
       .kind(flecs::OnLoad)
       .each([](flecs::entity e, const Texture& texture_data) {
         auto texture_path =
@@ -96,7 +96,7 @@ Buffering::Buffering(flecs::world& world) {
   world.component<Mesh>();
   world.component<MeshBuffer>();
 
-  world.system<const Mesh>("MeshBufferingSystem")
+  world.system<const Mesh>("Mesh Buffering System")
       .kind(flecs::OnLoad)
       .each([](flecs::entity e, const Mesh& mesh_data) {
         auto vertices = mesh_data.vertices;
