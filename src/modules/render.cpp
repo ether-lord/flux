@@ -28,11 +28,9 @@ Render::Render(flecs::world& world) {
         auto fly_camera = it.world().entity<FlyCamera>();
         auto camera_position_cpmponent = fly_camera.get<Position>();
         auto camera_direction_component = fly_camera.get<Direction>();
-
         vec3 camera_position{camera_position_cpmponent->x,
                              camera_position_cpmponent->y,
                              camera_position_cpmponent->z};
-
         vec3 camera_up = fly_camera.get<FlyCamera>()->up;
         vec3 camera_target = fly_camera.get<FlyCamera>()->target;
 
@@ -41,8 +39,8 @@ Render::Render(flecs::world& world) {
         auto model = mat4(1.f);
         model = translate(model, transform.position);
         model = scale(model, transform.scale);
-        model = rotate(model, radians((float)glfwGetTime() * 1000),
-                       {1.f, 0.f, 0.f});
+        model =
+            rotate(model, radians((float)glfwGetTime() * 10), {1.f, 0.f, 0.f});
         model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
         model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
@@ -51,8 +49,8 @@ Render::Render(flecs::world& world) {
         glUseProgram(shader->id);
         int model_loc = glGetUniformLocation(shader->id, "model");
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, value_ptr(model));
-        auto view = lookAt(camera_position, camera_position + camera_target,
-                           camera_up);
+        auto view =
+            lookAt(camera_position, camera_position + camera_target, camera_up);
         int view_loc = glGetUniformLocation(shader->id, "view");
         glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
         int projection_loc = glGetUniformLocation(shader->id, "projection");
@@ -93,9 +91,9 @@ WindowPreProcessing::WindowPreProcessing(flecs::world& world) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       });
 
-  world.system<Window, const InputHandler>("WindowInputHandler")
+  world.system<Window, const InputTarget>("WindowInputHandler")
       .kind(flecs::PostLoad)
-      .each([](flecs::entity e, Window& window, const InputHandler& input) {
+      .each([](flecs::entity e, Window& window, const InputTarget& input) {
         auto keyboard_events = e.world().get<Input>()->keyboard_events;
 
         if (keyboard_events.count(KeyboardKey::kEscape))

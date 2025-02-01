@@ -66,7 +66,7 @@ int main() {
   shader.set<ShaderData>(shader_data);
 
   auto window = game.get<Window>();
-  game.entity<Window>().add<InputHandler>();
+  game.entity<Window>().add<InputTarget>();
 
   mat4 projection = mat4(1.0f);
   projection =

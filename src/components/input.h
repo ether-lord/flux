@@ -11,13 +11,17 @@ enum class KeyState { kPressed = GLFW_PRESS, kReleased = GLFW_RELEASE };
 enum class KeyboardKey {
   kEscape = GLFW_KEY_ESCAPE,
   kKeyW = GLFW_KEY_W,
-  kKeyS = GLFW_KEY_S
+  kKeyS = GLFW_KEY_S,
+  kKeyD = GLFW_KEY_D,
+  kKeyA = GLFW_KEY_A
 };
 
-struct InputHandler { };
+struct InputTarget { };
 
 struct Input {
   std::unordered_map<KeyboardKey, KeyState> keyboard_events;
+  float mouse_x;
+  float mouse_y;
 };
 
 }  // namespace flux::components

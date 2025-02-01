@@ -55,8 +55,6 @@ set(
   ENGINE_SOURCES
 
   src/resources_manager.cpp
-  src/shader.cpp
-  src/shader_program.cpp
 
   src/modules/render.cpp
   src/modules/resources.cpp

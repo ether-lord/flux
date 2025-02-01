@@ -15,6 +15,13 @@ using namespace flux::components;
 
 namespace flux::modules {
 
+struct MousePosition {
+  float x, y;
+};
+
+static MousePosition mouse_position = {0, 0};
+static float mouse_sensitivity = 0.1f;
+
 static std::unordered_map<KeyboardKey, KeyState> keyboard_events;
 
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
@@ -23,49 +30,41 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
       static_cast<KeyState>(action);
 };
 
-InputHandling::InputHandling(flecs::world& world) {
-  glfwSetKeyCallback(world.get<Window>()->ptr, KeyCallback);
+void MouseCallback(GLFWwindow* window, double mouse_x, double mouse_y) {
+  float offset_x = mouse_x - mouse_position.x;
+  float offset_y = mouse_y - mouse_position.y;
 
-  world.component<InputHandler>();
+  mouse_position = {.x = static_cast<float>(mouse_x),
+                    .y = static_cast<float>(mouse_y)};
+};
+
+InputHandling::InputHandling(flecs::world& world) {
+  auto window = world.get<Window>();
+  glfwSetKeyCallback(window->ptr, KeyCallback);
+  glfwSetCursorPosCallback(window->ptr, MouseCallback);
+  mouse_position = {window->video_mode->width / 2.f,
+                    window->video_mode->height / 2.f};
+
+  world.component<InputTarget>();
   world.set<Input>({keyboard_events});
 
-  world.system<Input>("Poll input events")
+  world.system<Input>("InputSystem")
       .kind(flecs::PostLoad)
-      .each([](Input& input) { glfwPollEvents(); });
+      .each([](Input& input) {
+        glfwPollEvents();
+        input.keyboard_events = keyboard_events;
+        keyboard_events.clear();
+      });
 
-  world.system<Window, const InputHandler>("Window input system")
+  world.system<Window, const InputTarget>("Window input system")
       .kind(flecs::PostLoad)
-      .each([](Window& window, const InputHandler) {
+      .each([](Window& window, const InputTarget) {
         if (keyboard_events.count(KeyboardKey::kEscape) &&
             keyboard_events[KeyboardKey::kEscape] == KeyState::kReleased) {
           glfwSetWindowShouldClose(window.ptr, true);
         }
       });
 
-  world.system<Direction, const Speed, const InputHandler>("Movable objects input system")
-      .kind(flecs::PostLoad)
-      .each([&](flecs::entity e, Direction& direction, const Speed,
-                const InputHandler&) {
-        for (auto [key, state] : keyboard_events) {
-          switch (state) {
-            case KeyState::kPressed:
-              if (key == KeyboardKey::kKeyW)
-                direction.z = -1.f;
-              else if (key == KeyboardKey::kKeyS)
-                direction.z = 1.f;
-              break;
-            case KeyState::kReleased:
-              direction = Direction{0.f, 0.f, 0.f};
-              break;
-            default:
-              break;
-          }
-        }
-      });
-
-  world.system<Input>("Clear input events")
-      .kind(flecs::PostLoad)
-      .each([](Input& input) { keyboard_events.clear(); });
 }
 
 }  // namespace flux::modules
