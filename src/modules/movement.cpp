@@ -15,9 +15,9 @@ Movement::Movement(flecs::world& world) {
       .kind(flecs::PreUpdate)
       .each([](Position& position, const Direction& direction,
                const Speed& speed) {
-                position.x += direction.x * speed.value;
-                position.y += direction.y * speed.value;
-                position.z += direction.z * speed.value;
+                position.x += direction.x * speed.magnitude;
+                position.y += direction.y * speed.magnitude;
+                position.z += direction.z * speed.magnitude;
       });
 }
 

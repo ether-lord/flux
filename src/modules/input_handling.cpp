@@ -1,4 +1,4 @@
-#include "modules/input.h"
+#include "input_handling.h"
 
 #include <glfw3.h>
 
@@ -48,6 +48,8 @@ void MouseCallback(GLFWwindow* window, double mouse_x, double mouse_y) {
 };
 
 InputHandling::InputHandling(flecs::world& world) {
+  world.component<InputTarget>();
+
   auto window = world.get<Window>();
   glfwSetKeyCallback(window->ptr, KeyCallback);
   glfwSetCursorPosCallback(window->ptr, MouseCallback);
@@ -55,17 +57,31 @@ InputHandling::InputHandling(flecs::world& world) {
   mouse_position = {window->video_mode->width / 2.f,
                     window->video_mode->height / 2.f};
 
-  world.component<InputTarget>();
-  world.set<Input>({keyboard_events});
+  // Registering keyboard keys
+  std::unordered_map<KeyboardKey, KeyState> keyboard_state;
+  keyboard_state[KeyboardKey::kEscape] = KeyState::kNone;
+  keyboard_state[KeyboardKey::kKeyW] = KeyState::kNone;
+  keyboard_state[KeyboardKey::kKeyA] = KeyState::kNone;
+  keyboard_state[KeyboardKey::kKeyS] = KeyState::kNone;
+  keyboard_state[KeyboardKey::kKeyD] = KeyState::kNone;
+
+  world.set<Input>(
+      {.keyboard_events = keyboard_events, .keyboard_state = keyboard_state});
 
   world.system<Input>("InputSystem")
       .kind(flecs::PostLoad)
-      .each([](Input& input) {
+      .each([](flecs::entity e, Input& input) {
+        auto window = e.world().get<Window>()->ptr;
+
         glfwPollEvents();
         input.keyboard_events = keyboard_events;
         input.mouse_offset = mouse_offset;
         keyboard_events.clear();
         mouse_offset = glm::vec2{0.f, 0.f};
+
+        for (auto& [key, state] : input.keyboard_state) {
+          state = static_cast<KeyState>(glfwGetKey(window, static_cast<int>(key)));
+        }
       });
 
   world.system<Window, const InputTarget>("Window input system")

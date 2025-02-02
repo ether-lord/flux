@@ -11,7 +11,7 @@ struct Direction {
 };
 
 struct Speed {
-  float value;
+  float magnitude;
 };
 
 struct Position {

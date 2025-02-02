@@ -58,9 +58,13 @@ set(
 
   src/modules/render.cpp
   src/modules/resources.cpp
-  src/modules/input.cpp
+  src/modules/input_handling.cpp
   src/modules/camera.cpp
   src/modules/movement.cpp
+
+  src/modules
+
+  src/components
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)

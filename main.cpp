@@ -12,7 +12,7 @@
 #include "components/input.h"
 #include "components/shader.h"
 #include "modules/camera.h"
-#include "modules/input.h"
+#include "modules/input_handling.h"
 #include "modules/movement.h"
 #include "modules/render.h"
 #include "modules/resources.h"
@@ -41,21 +41,36 @@ int main() {
   game.import <Camera>();
   game.import <Render>();
 
-  Mesh square_data;
-  square_data.vertices = {
-      Vertex{.position{-0.5f, 0.5f, 0.f}, .uv = {0.f, 1.f}},
-      Vertex{.position{0.5f, 0.5f, 0.f}, .uv = {1.f, 1.f}},
-      Vertex{.position{0.5f, -0.5f, 0.f}, .uv = {1.f, 0.f}},
-      Vertex{.position{-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}};
-  square_data.indices = {0, 1, 2, 2, 3, 0};
+  // Mesh square_data;
+  // square_data.vertices = {
+  //     Vertex{.position{-0.5f, 0.5f, 0.f}, .uv{0.f, 1.f}},
+  //     Vertex{.position{0.5f, 0.5f, 0.f}, .uv{1.f, 1.f}},
+  //     Vertex{.position{0.5f, -0.5f, 0.f}, .uv{1.f, 0.f}},
+  //     Vertex{.position{-0.5f, -0.5f, 0.f}, .uv{1.f, 1.f}}};
+  // square_data.indices = {0, 1, 2, 2, 3, 0};
 
   Transform transform = {.position = {1.f, 0.f, 0.f},
-                         .rotation = {90.f, 0.f, 0.f}};
+                         .rotation = {0.f, 0.f, 0.f}};
 
-  auto square = game.entity("Square");
-  square.set<Mesh>(square_data);
-  square.set<Texture>({"container.jpg"});
-  square.set<Transform>(transform);
+  // auto square = game.entity("Square");
+  // square.set<Mesh>(square_data);
+  // square.set<Texture>({"container.jpg"});
+  // square.set<Transform>(transform);
+
+  Mesh dirt_block_data;
+  dirt_block_data.vertices = {
+      {.position = {-0.5f, 0.5f, 0.f}, .uv = {0.f, 0.65f}},
+      {.position = {0.5f, 0.5f, 0.f}, .uv = {0.25f, 0.65f}},
+      {.position = {0.5f, -0.5f, 0.f}, .uv = {0.25f, 0.34f}},
+      {.position = {-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.34f}}
+  };
+
+  dirt_block_data.indices = {0, 1, 2, 2, 3, 0};
+  
+  auto dirt_block = game.entity("Dirt");
+  dirt_block.set<Mesh>(dirt_block_data);
+  dirt_block.set<Texture>({"dirt_block.jpg"});
+  dirt_block.set<Transform>(transform);
 
   ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "vertex"};
   ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "fragment"};

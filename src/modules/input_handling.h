@@ -8,4 +8,4 @@ struct InputHandling {
   InputHandling(flecs::world& world);
 };
 
-} // namespace flux::modules
+}  // namespace flux::modules

@@ -39,8 +39,7 @@ Render::Render(flecs::world& world) {
         auto model = mat4(1.f);
         model = translate(model, transform.position);
         model = scale(model, transform.scale);
-        model =
-            rotate(model, radians((float)glfwGetTime() * 10), {1.f, 0.f, 0.f});
+        model = rotate(model, radians(transform.rotation.x), {1.f, 0.f, 0.f});
         model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
         model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
