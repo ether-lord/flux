@@ -8,21 +8,19 @@
 #include <iostream>
 #include <vector>
 
-#include "components/graphics.h"
 #include "components/input.h"
-#include "components/shader.h"
 #include "modules/camera.h"
 #include "modules/input_handling.h"
 #include "modules/movement.h"
 #include "modules/render.h"
-#include "modules/resources.h"
-#include "modules/shaders.h"
+#include "modules/window.h"
 #include "modules/textures.h"
 
 using namespace std;
 using namespace flecs;
 using namespace glm;
 
+using namespace flux;
 using namespace flux::components;
 using namespace flux::modules;
 
@@ -32,14 +30,10 @@ int main() {
   game.import <flecs::stats>();
   game.set<flecs::Rest>({});
 
-  game.import <WindowPreProcessing>();
-  game.import <Shaders>();
-  game.import <Textures>();
   game.import <Buffering>();
-  game.import <InputHandling>();
   game.import <Movement>();
-  game.import <Camera>();
   game.import <Render>();
+  game.import <InputHandling>();
 
   Transform transform = {.position = {1.f, 0.f, 0.f},
                          .rotation = {0.f, 0.f, 0.f}};
@@ -49,14 +43,13 @@ int main() {
       {.position = {-0.5f, 0.5f, 0.f}, .uv = {0.f, 1.f}},
       {.position = {0.5f, 0.5f, 0.f}, .uv = {1.f, 1.f}},
       {.position = {0.5f, -0.5f, 0.f}, .uv = {1.f, 0.f}},
-      {.position = {-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}
-  };
+      {.position = {-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}};
 
   dirt_block_data.indices = {0, 1, 2, 2, 3, 0};
-  
+
   auto dirt_block = game.entity("Dirt");
   dirt_block.set<Mesh>(dirt_block_data);
-  dirt_block.set<Texture>({"dirt.png"});
+  dirt_block.set<TextureData>({"dirt.png"});
   dirt_block.set<Transform>(transform);
 
   auto window = game.get<Window>();

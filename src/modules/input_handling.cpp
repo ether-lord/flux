@@ -6,8 +6,8 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "components/graphics.h"
 #include "components/input.h"
+#include "modules/window.h"
 #include "components/movement.h"
 
 using namespace std;

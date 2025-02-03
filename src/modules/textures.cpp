@@ -1,28 +1,25 @@
 #include "textures.h"
 
-
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <glad.h>
 
-#include "components/graphics.h"
-#include "components/shader.h"
 #include "resources_manager.h"
 #include "stb_image.h"
-#include "components/graphics.h"
 
-using namespace flux::components;
 using namespace flux::resources;
 
+namespace flux {
+
 Textures::Textures(flecs::world& world) {
+  world.component<TextureData>();
   world.component<Texture>();
-  world.component<TextureBuffer>();
 
   stbi_set_flip_vertically_on_load(true);
 
-  world.system<const Texture>("Texture Loader")
+  world.system<const TextureData>("Texture Loader")
       .kind(flecs::OnLoad)
-      .each([](flecs::entity e, const Texture& texture_data) {
+      .each([](flecs::entity e, const TextureData& texture_data) {
         auto texture_path =
             ResourcesManager::get().GetPathToTexture(texture_data.name);
 
@@ -48,7 +45,9 @@ Textures::Textures(flecs::world& world) {
         }
         stbi_image_free(data);
 
-        e.remove<Texture>();
-        e.set<TextureBuffer>({texture});
+        e.remove<TextureData>();
+        e.set<Texture>({texture});
       });
 }
+
+}  // namespace flux

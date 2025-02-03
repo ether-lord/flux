@@ -4,25 +4,25 @@
 
 #include <iostream>
 
-#include "components/graphics.h"
-#include "components/shader.h"
 #include "resources_manager.h"
 
 using namespace std;
-using namespace flux::components;
 using namespace flux::resources;
+
+
+namespace flux {
 
 Shaders::Shaders(flecs::world& world) {
   auto default_shader = world.entity("default");
-  default_shader.set<ShaderInfo>({"default"});
+  default_shader.set<ShaderData>({"default"});
 
-  world.system<ShaderInfo>("Loader")
+  world.system<ShaderData>("Loader")
       .kind(flecs::OnLoad)
-      .each([](flecs::entity e, ShaderInfo& shader_info) {
+      .each([](flecs::entity e, ShaderData& shader_data) {
         Shader shader{glCreateProgram()};
 
         auto vertex_shader_source = ResourcesManager::get().GetShaderSource(
-            shader_info.name, GL_VERTEX_SHADER);
+            shader_data.name, GL_VERTEX_SHADER);
         auto vertex_shader_source_data = vertex_shader_source.data();
 
         auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -43,7 +43,7 @@ Shaders::Shaders(flecs::world& world) {
         glAttachShader(shader.id, vertex_shader);
 
         auto fragment_shader_source = ResourcesManager::get().GetShaderSource(
-            shader_info.name, GL_FRAGMENT_SHADER);
+            shader_data.name, GL_FRAGMENT_SHADER);
         auto fragment_shader_source_data = fragment_shader_source.data();
 
         auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -79,6 +79,8 @@ Shaders::Shaders(flecs::world& world) {
         glDeleteShader(fragment_shader);
 
         e.set<Shader>(shader);
-        e.remove<ShaderInfo>();
+        e.remove<ShaderData>();
       });
 }
+
+}  // namespace flux

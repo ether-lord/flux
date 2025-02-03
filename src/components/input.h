@@ -3,6 +3,7 @@
 #include <glfw3.h>
 
 #include <unordered_map>
+#include <glm/vec2.hpp>
 
 namespace flux::components {
 

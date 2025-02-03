@@ -2,14 +2,13 @@
 
 #include <iostream>
 
-#include "components/graphics.h"
 #include "components/input.h"
 #include "components/movement.h"
 
 using namespace flux::components;
 using namespace glm;
 
-namespace flux::modules {
+namespace flux {
 
 Camera::Camera(flecs::world& world) {
   FlyCamera camera;
@@ -72,4 +71,4 @@ Camera::Camera(flecs::world& world) {
       });
 }
 
-}  // namespace flux::modules
+}  // namespace flux

@@ -2,21 +2,54 @@
 
 #include <flecs.h>
 
+#define LOG_BUFF_SIZE 1024u
 #define GLFW_INCLUDE_NONE
 
-#include "glad.h"
-#include "glfw3.h"
+#include <glad.h>
+#include <glfw3.h>
 
-namespace flux::modules {
+#include <glm/glm.hpp>
+#include <vector>
+
+namespace flux {
+
+struct Vertex {
+  glm::vec3 position;
+  glm::vec2 uv;
+};
+
+struct Mesh {
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+};
+
+struct MeshBuffer {
+  unsigned int vao;
+  unsigned int indices;
+};
+
+struct Transform {
+  glm::vec3 position;
+  glm::vec3 rotation;
+  glm::vec3 scale{1.f, 1.f, 1.f};
+};
+
+struct Projection {
+  glm::mat4 matirx;
+};
+
+struct View {
+  glm::mat4 matrix;
+};
 
 struct Render {
   Render(flecs::world& world);
 };
 
-struct WindowPreProcessing {
-  WindowPreProcessing(flecs::world& world);
+struct Buffering {
+  Buffering(flecs::world& world);
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-}  // namespace flux::modules
+}  // namespace flux
