@@ -1,11 +1,12 @@
 #pragma once
 
+#include <flecs.h>
 #include <glfw3.h>
 
+#include <glm/glm.hpp>
 #include <unordered_map>
-#include <glm/vec2.hpp>
 
-namespace flux::components {
+namespace flux {
 
 enum class KeyState {
   kNone = 0,
@@ -24,10 +25,14 @@ enum class KeyboardKey {
 
 struct InputTarget {};
 
-struct Input {
+struct InputData {
   std::unordered_map<KeyboardKey, KeyState> keyboard_events;
   std::unordered_map<KeyboardKey, KeyState> keyboard_state;
   glm::vec2 mouse_offset;
 };
 
-}  // namespace flux::components
+struct Input {
+  Input(flecs::world& world);
+};
+
+}  // namespace flux::modules

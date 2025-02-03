@@ -4,9 +4,9 @@
 #include <glm/gtx/transform.hpp>
 #include <iostream>
 
-#include "components/input.h"
-#include "components/movement.h"
 #include "modules/camera.h"
+#include "modules/input.h"
+#include "modules/movement.h"
 #include "modules/shaders.h"
 #include "modules/textures.h"
 #include "modules/window.h"
@@ -15,15 +15,10 @@ using namespace glm;
 using namespace std;
 
 using namespace flux;
-using namespace flux::components;
 
 namespace flux {
 
 Render::Render(flecs::world& world) {
-  world.import <Shaders>();
-  world.import <Textures>();
-  world.import <Camera>();
-
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -44,6 +39,13 @@ Render::Render(flecs::world& world) {
   glfwSetInputMode(glfw_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   world.set<Window>(Window{glfw_window, video_mode});
+
+  world.import <Buffering>();
+  world.import <Shaders>();
+  world.import <Textures>();
+  world.import <Camera>();
+  world.import <Movement>();
+  world.import <Input>();
 
   world.system<const MeshBuffer, const Texture, const Transform>("MeshRenderer")
       .kind(flecs::OnStore)
@@ -99,7 +101,7 @@ Render::Render(flecs::world& world) {
   world.system<Window, const InputTarget>("WindowInputHandler")
       .kind(flecs::PostLoad)
       .each([](flecs::entity e, Window& window, const InputTarget& input) {
-        auto keyboard_events = e.world().get<Input>()->keyboard_events;
+        auto keyboard_events = e.world().get<InputData>()->keyboard_events;
 
         if (keyboard_events.count(KeyboardKey::kEscape))
           glfwSetWindowShouldClose(
@@ -158,7 +160,6 @@ Buffering::Buffering(flecs::world& world) {
             MeshBuffer{.vao = vao, .indices = (unsigned int)indices.size()});
       });
 }
-
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
   glViewport(0, 0, width, height);

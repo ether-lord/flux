@@ -1,4 +1,4 @@
-#include "input_handling.h"
+#include "input.h"
 
 #include <glfw3.h>
 
@@ -6,14 +6,11 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "components/input.h"
 #include "modules/window.h"
-#include "components/movement.h"
 
 using namespace std;
-using namespace flux::components;
 
-namespace flux::modules {
+namespace flux {
 
 static bool first_mouse_callback = true;
 
@@ -47,7 +44,7 @@ void MouseCallback(GLFWwindow* window, double mouse_x, double mouse_y) {
   mouse_position = {static_cast<float>(mouse_x), static_cast<float>(mouse_y)};
 };
 
-InputHandling::InputHandling(flecs::world& world) {
+Input::Input(flecs::world& world) {
   world.component<InputTarget>();
 
   auto window = world.get<Window>();
@@ -65,12 +62,12 @@ InputHandling::InputHandling(flecs::world& world) {
   keyboard_state[KeyboardKey::kKeyS] = KeyState::kNone;
   keyboard_state[KeyboardKey::kKeyD] = KeyState::kNone;
 
-  world.set<Input>(
+  world.set<InputData>(
       {.keyboard_events = keyboard_events, .keyboard_state = keyboard_state});
 
-  world.system<Input>("InputSystem")
+  world.system<InputData>("InputSystem")
       .kind(flecs::PostLoad)
-      .each([](flecs::entity e, Input& input) {
+      .each([](flecs::entity e, InputData& input) {
         auto window = e.world().get<Window>()->ptr;
 
         glfwPollEvents();

@@ -2,10 +2,9 @@
 
 #include <iostream>
 
-#include "components/input.h"
-#include "components/movement.h"
+#include "modules/input.h"
+#include "modules/movement.h"
 
-using namespace flux::components;
 using namespace glm;
 
 namespace flux {
@@ -27,7 +26,7 @@ Camera::Camera(flecs::world& world) {
       .kind(flecs::PreUpdate)
       .each([](flecs::entity e, FlyCamera& camera, Direction& direction,
                const InputTarget&) {
-        auto keyboard_state = e.world().get<Input>()->keyboard_state;
+        auto keyboard_state = e.world().get<InputData>()->keyboard_state;
 
         vec3 direction_vector{0.f};
 
@@ -53,7 +52,7 @@ Camera::Camera(flecs::world& world) {
         direction.y = direction_vector.y;
         direction.z = direction_vector.z;
 
-        auto mouse_offset = e.world().get<Input>()->mouse_offset;
+        auto mouse_offset = e.world().get<InputData>()->mouse_offset;
 
         camera.yaw += mouse_offset.x;
         camera.pitch += mouse_offset.y;

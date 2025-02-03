@@ -1,10 +1,6 @@
-#include "modules/movement.h"
+#include "movement.h"
 
-#include "components/movement.h"
-
-using namespace flux::components;
-
-namespace flux::modules {
+namespace flux {
 
 Movement::Movement(flecs::world& world) {
   world.component<Direction>();
@@ -15,10 +11,10 @@ Movement::Movement(flecs::world& world) {
       .kind(flecs::PreUpdate)
       .each([](Position& position, const Direction& direction,
                const Speed& speed) {
-                position.x += direction.x * speed.magnitude;
-                position.y += direction.y * speed.magnitude;
-                position.z += direction.z * speed.magnitude;
+        position.x += direction.x * speed.magnitude;
+        position.y += direction.y * speed.magnitude;
+        position.z += direction.z * speed.magnitude;
       });
 }
 
-}  // namespace flux::modules
+}  // namespace flux

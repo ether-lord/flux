@@ -8,9 +8,8 @@
 #include <iostream>
 #include <vector>
 
-#include "components/input.h"
 #include "modules/camera.h"
-#include "modules/input_handling.h"
+#include "modules/input.h"
 #include "modules/movement.h"
 #include "modules/render.h"
 #include "modules/window.h"
@@ -21,8 +20,6 @@ using namespace flecs;
 using namespace glm;
 
 using namespace flux;
-using namespace flux::components;
-using namespace flux::modules;
 
 int main() {
   world game;
@@ -30,10 +27,7 @@ int main() {
   game.import <flecs::stats>();
   game.set<flecs::Rest>({});
 
-  game.import <Buffering>();
-  game.import <Movement>();
   game.import <Render>();
-  game.import <InputHandling>();
 
   Transform transform = {.position = {1.f, 0.f, 0.f},
                          .rotation = {0.f, 0.f, 0.f}};
