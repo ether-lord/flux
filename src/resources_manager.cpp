@@ -1,5 +1,6 @@
 #include "resources_manager.h"
 
+#include <glad.h>
 #include <unistd.h>
 
 #include <cstdio>
@@ -28,8 +29,11 @@ ResourcesManager::ResourcesManager() {
   }
 
   shaders_location_ = settings_["res"]["shader"]["location"];
-  textures_location_ = settings_["res"]["textures"]["location"];
   shaders_default_ext_ = settings_["res"]["shader"]["default_ext"];
+  vertex_shader_name_ = settings_["res"]["shader"]["vertex_name"];
+  fragment_shader_name_ = settings_["res"]["shader"]["fragment_name"];
+
+  textures_location_ = settings_["res"]["textures"]["location"];
 }
 
 ResourcesManager &ResourcesManager::get() {
@@ -58,6 +62,17 @@ string ResourcesManager::GetFileSource(const string &path) const {
 
 std::string ResourcesManager::GetShaderSource(const std::string &name) const {
   string shader_path = shaders_location_ + name + shaders_default_ext_;
+  return GetFileSource(shader_path);
+}
+
+std::string ResourcesManager::GetShaderSource(const std::string &name,
+                                              unsigned int type) const {
+  string shader_path = shaders_location_ + name + "/";
+  if (type == GL_VERTEX_SHADER)
+    shader_path += vertex_shader_name_;
+  else if (type = GL_FRAGMENT_SHADER)
+    shader_path += fragment_shader_name_;
+    
   return GetFileSource(shader_path);
 }
 

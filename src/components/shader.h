@@ -5,17 +5,12 @@
 
 namespace flux::components {
 
-struct BasicShader {
-  unsigned int id;
-};
-
 struct ShaderInfo {
-  unsigned int type;
   std::string name;
 };
 
-struct ShaderData {
-  std::vector<ShaderInfo> data;
+struct Shader {
+  unsigned int id;
 };
 
 }  // namespace flux::components

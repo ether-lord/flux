@@ -25,6 +25,8 @@ Render::Render(flecs::world& world) {
                const TextureBuffer& texture, const Transform& transform) {
         auto projection = it.world().get<Projection>();
 
+        cout << it.world().lookup("Shaders::default_shader").is_valid() << endl;
+
         auto fly_camera = it.world().entity<FlyCamera>();
         auto camera_position_cpmponent = fly_camera.get<Position>();
         auto camera_direction_component = fly_camera.get<Direction>();
@@ -43,9 +45,13 @@ Render::Render(flecs::world& world) {
         model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
         model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
-        auto shader_id = it.world().get<BasicShader>()->id;
+        auto shader = it.world().lookup("Shaders::default");
+        if (!shader.is_valid() || !shader.has<Shader>())
+          return;
 
+        auto shader_id = shader.get<Shader>()->id;
         glUseProgram(shader_id);
+
         int model_loc = glGetUniformLocation(shader_id, "model");
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, value_ptr(model));
         auto view =

@@ -12,51 +12,73 @@ using namespace std;
 using namespace flux::components;
 using namespace flux::resources;
 
-namespace flux::modules {
-
 Shaders::Shaders(flecs::world& world) {
-  world.add<BasicShader>();
+  auto default_shader = world.entity("default");
+  default_shader.set<ShaderInfo>({"default"});
 
-  ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "vertex"};
-  ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "fragment"};
-  ShaderData shader_data{{vertex_shader_info, frag_shader_info}};
+  world.system<ShaderInfo>("Loader")
+      .kind(flecs::OnLoad)
+      .each([](flecs::entity e, ShaderInfo& shader_info) {
+        Shader shader{glCreateProgram()};
 
-  auto basic_shader = world.get_mut<BasicShader>();
-  basic_shader->id = glCreateProgram();
+        auto vertex_shader_source = ResourcesManager::get().GetShaderSource(
+            shader_info.name, GL_VERTEX_SHADER);
+        auto vertex_shader_source_data = vertex_shader_source.data();
 
-  for (const auto& shader : shader_data.data) {
-    auto shader_source = ResourcesManager::get().GetShaderSource(shader.name);
-    auto shader_source_cstr = shader_source.c_str();
-    auto shader_id = glCreateShader(shader.type);
-    glShaderSource(shader_id, 1, &shader_source_cstr, NULL);
+        auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex_shader, 1, &vertex_shader_source_data, NULL);
 
-    int compile_status = 0;
-    glCompileShader(shader_id);
-    glGetShaderiv(shader_id, GL_COMPILE_STATUS, &compile_status);
+        int compile_status = 0;
+        glCompileShader(vertex_shader);
+        glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &compile_status);
 
-    if (!compile_status) {
-      std::string log;
-      log.reserve(LOG_BUFF_SIZE);
+        if (!compile_status) {
+          std::string log;
+          log.reserve(LOG_BUFF_SIZE);
 
-      glGetShaderInfoLog(shader_id, LOG_BUFF_SIZE, NULL, log.data());
-      cout << log << endl;
-    }
+          glGetShaderInfoLog(vertex_shader, LOG_BUFF_SIZE, NULL, log.data());
+          cout << log << endl;
+        }
 
-    glAttachShader(basic_shader->id, shader_id);
-  }
+        glAttachShader(shader.id, vertex_shader);
 
-  glLinkProgram(basic_shader->id);
+        auto fragment_shader_source = ResourcesManager::get().GetShaderSource(
+            shader_info.name, GL_FRAGMENT_SHADER);
+        auto fragment_shader_source_data = fragment_shader_source.data();
 
-  int link_status = 0;
-  glGetProgramiv(basic_shader->id, GL_LINK_STATUS, &link_status);
+        auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment_shader, 1, &fragment_shader_source_data, NULL);
 
-  if (!link_status) {
-    std::string log;
-    log.reserve(LOG_BUFF_SIZE);
+        glCompileShader(fragment_shader);
+        glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &compile_status);
 
-    glGetProgramInfoLog(basic_shader->id, LOG_BUFF_SIZE, NULL, log.data());
-    cout << log << endl;
-  }
+        if (!compile_status) {
+          std::string log;
+          log.reserve(LOG_BUFF_SIZE);
+
+          glGetShaderInfoLog(fragment_shader, LOG_BUFF_SIZE, NULL, log.data());
+          cout << log << endl;
+        }
+
+        glAttachShader(shader.id, fragment_shader);
+
+        glLinkProgram(shader.id);
+
+        int link_status = 0;
+        glGetProgramiv(shader.id, GL_LINK_STATUS, &link_status);
+
+        if (!link_status) {
+          std::string log;
+          log.reserve(LOG_BUFF_SIZE);
+
+          glGetProgramInfoLog(shader.id, LOG_BUFF_SIZE, NULL, log.data());
+          cout << log << endl;
+        }
+
+        glDeleteShader(vertex_shader);
+        glDeleteShader(fragment_shader);
+
+        e.set<Shader>(shader);
+        e.remove<ShaderInfo>();
+      });
 }
-
-}  // namespace flux::modules

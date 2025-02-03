@@ -2,7 +2,9 @@
   "res": {
     "shader": {
       "location": "/res/shaders/",
-      "default_ext": ".glsl"
+      "default_ext": ".glsl",
+      "vertex_name": "vertex.glsl",
+      "fragment_name": "fragment.glsl"
     },
     "textures": {
       "location": "/res/textures/"

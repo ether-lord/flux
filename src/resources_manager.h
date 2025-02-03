@@ -17,6 +17,7 @@ class ResourcesManager {
   std::string GetPathToTexture(const std::string& name) const;
   std::string GetFileSource(const std::string& rel_path) const;
   std::string GetShaderSource(const std::string& name) const;
+  std::string GetShaderSource(const std::string& name, unsigned int type) const;
 
  private:
   ResourcesManager();
@@ -27,6 +28,8 @@ class ResourcesManager {
   std::string shaders_location_;
   std::string textures_location_;
   std::string shaders_default_ext_;
+  std::string vertex_shader_name_;
+  std::string fragment_shader_name_;
 
   json settings_;
 };
