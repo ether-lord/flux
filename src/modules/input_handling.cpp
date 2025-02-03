@@ -80,7 +80,8 @@ InputHandling::InputHandling(flecs::world& world) {
         mouse_offset = glm::vec2{0.f, 0.f};
 
         for (auto& [key, state] : input.keyboard_state) {
-          state = static_cast<KeyState>(glfwGetKey(window, static_cast<int>(key)));
+          state =
+              static_cast<KeyState>(glfwGetKey(window, static_cast<int>(key)));
         }
       });
 

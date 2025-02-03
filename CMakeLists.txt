@@ -13,8 +13,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     -fsanitize=float-divide-by-zero
     -fsanitize=float-cast-overflow
     -fno-sanitize=null
-    -fno-sanitize=alignment
-    -Ofast)
+    -fno-sanitize=alignment)
   add_compile_options(-fsanitize=address, -lasan, -fsanitize=undefined)
   add_link_options(-fsanitize=address, -fsanitize=undefined)
 endif()
@@ -61,6 +60,7 @@ set(
   src/modules/input_handling.cpp
   src/modules/camera.cpp
   src/modules/movement.cpp
+  src/modules/shaders.cpp
 
   src/modules
 

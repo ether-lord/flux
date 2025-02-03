@@ -16,6 +16,7 @@
 #include "modules/movement.h"
 #include "modules/render.h"
 #include "modules/resources.h"
+#include "modules/shaders.h"
 
 using namespace std;
 using namespace flecs;
@@ -28,12 +29,10 @@ int main() {
   world game;
 
   game.import <flecs::stats>();
-
-  // Creates REST server on default port (27750)
   game.set<flecs::Rest>({});
 
   game.import <WindowPreProcessing>();
-  game.import <ShaderLoader>();
+  game.import <Shaders>();
   game.import <TextureLoader>();
   game.import <Buffering>();
   game.import <InputHandling>();
@@ -41,44 +40,23 @@ int main() {
   game.import <Camera>();
   game.import <Render>();
 
-  // Mesh square_data;
-  // square_data.vertices = {
-  //     Vertex{.position{-0.5f, 0.5f, 0.f}, .uv{0.f, 1.f}},
-  //     Vertex{.position{0.5f, 0.5f, 0.f}, .uv{1.f, 1.f}},
-  //     Vertex{.position{0.5f, -0.5f, 0.f}, .uv{1.f, 0.f}},
-  //     Vertex{.position{-0.5f, -0.5f, 0.f}, .uv{1.f, 1.f}}};
-  // square_data.indices = {0, 1, 2, 2, 3, 0};
-
   Transform transform = {.position = {1.f, 0.f, 0.f},
                          .rotation = {0.f, 0.f, 0.f}};
 
-  // auto square = game.entity("Square");
-  // square.set<Mesh>(square_data);
-  // square.set<Texture>({"container.jpg"});
-  // square.set<Transform>(transform);
-
   Mesh dirt_block_data;
   dirt_block_data.vertices = {
-      {.position = {-0.5f, 0.5f, 0.f}, .uv = {0.f, 0.65f}},
-      {.position = {0.5f, 0.5f, 0.f}, .uv = {0.25f, 0.65f}},
-      {.position = {0.5f, -0.5f, 0.f}, .uv = {0.25f, 0.34f}},
-      {.position = {-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.34f}}
+      {.position = {-0.5f, 0.5f, 0.f}, .uv = {0.f, 1.f}},
+      {.position = {0.5f, 0.5f, 0.f}, .uv = {1.f, 1.f}},
+      {.position = {0.5f, -0.5f, 0.f}, .uv = {1.f, 0.f}},
+      {.position = {-0.5f, -0.5f, 0.f}, .uv = {0.f, 0.f}}
   };
 
   dirt_block_data.indices = {0, 1, 2, 2, 3, 0};
   
   auto dirt_block = game.entity("Dirt");
   dirt_block.set<Mesh>(dirt_block_data);
-  dirt_block.set<Texture>({"dirt_block.jpg"});
+  dirt_block.set<Texture>({"dirt.png"});
   dirt_block.set<Transform>(transform);
-
-  ShaderInfo vertex_shader_info{GL_VERTEX_SHADER, "vertex"};
-  ShaderInfo frag_shader_info{GL_FRAGMENT_SHADER, "fragment"};
-  ShaderData shader_data{{vertex_shader_info, frag_shader_info}};
-
-  auto shader = game.entity("BasicShader");
-  shader.add<Shader>();
-  shader.set<ShaderData>(shader_data);
 
   auto window = game.get<Window>();
   game.entity<Window>().add<InputTarget>();

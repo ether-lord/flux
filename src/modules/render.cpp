@@ -43,16 +43,16 @@ Render::Render(flecs::world& world) {
         model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
         model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
-        auto shader = it.world().entity("BasicShader").get<Shader>();
+        auto shader_id = it.world().get<BasicShader>()->id;
 
-        glUseProgram(shader->id);
-        int model_loc = glGetUniformLocation(shader->id, "model");
+        glUseProgram(shader_id);
+        int model_loc = glGetUniformLocation(shader_id, "model");
         glUniformMatrix4fv(model_loc, 1, GL_FALSE, value_ptr(model));
         auto view =
             lookAt(camera_position, camera_position + camera_target, camera_up);
-        int view_loc = glGetUniformLocation(shader->id, "view");
+        int view_loc = glGetUniformLocation(shader_id, "view");
         glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
-        int projection_loc = glGetUniformLocation(shader->id, "projection");
+        int projection_loc = glGetUniformLocation(shader_id, "projection");
         glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
                            value_ptr(projection->matirx));
 

@@ -54,9 +54,6 @@ Camera::Camera(flecs::world& world) {
         direction.y = direction_vector.y;
         direction.z = direction_vector.z;
 
-        std::cout << direction.x << ' ' << direction.y << ' ' << direction.z
-                  << std::endl;
-
         auto mouse_offset = e.world().get<Input>()->mouse_offset;
 
         camera.yaw += mouse_offset.x;

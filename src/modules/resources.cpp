@@ -19,39 +19,7 @@ using namespace flux::resources;
 namespace flux::modules {
 
 ShaderLoader::ShaderLoader(flecs::world& world) {
-  world.component<ShaderData>();
-  world.component<Shader>();
-
-  world.system<Shader, const ShaderData>("Shader data loader")
-      .kind(flecs::OnLoad)
-      .each([](flecs::entity e, Shader& shader_program,
-               const ShaderData& shader_data) {
-        shader_program.id = glCreateProgram();
-        for (const auto& shader : shader_data.data) {
-          auto shader_source =
-              ResourcesManager::get().GetShaderSource(shader.name);
-          auto shader_source_cstr = shader_source.c_str();
-          auto shader_id = glCreateShader(shader.type);
-          glShaderSource(shader_id, 1, &shader_source_cstr, NULL);
-
-          int compile_status = 0;
-          glCompileShader(shader_id);
-          glGetShaderiv(shader_id, GL_COMPILE_STATUS, &compile_status);
-
-          if (!compile_status) {
-            std::string log;
-            log.reserve(LOG_BUFF_SIZE);
-
-            glGetShaderInfoLog(shader_id, LOG_BUFF_SIZE, NULL, log.data());
-            cout << log << endl;
-          }
-
-          glAttachShader(shader_program.id, shader_id);
-        }
-
-        glLinkProgram(shader_program.id);
-        e.remove<ShaderData>();
-      });
+ 
 }
 
 TextureLoader::TextureLoader(flecs::world& world) {
