@@ -23,11 +23,6 @@ struct Mesh {
   std::vector<unsigned int> indices;
 };
 
-struct MeshBuffer {
-  unsigned int vao;
-  unsigned int indices;
-};
-
 struct Transform {
   glm::vec3 position;
   glm::vec3 rotation;
@@ -44,10 +39,6 @@ struct View {
 
 struct Render {
   Render(flecs::world& world);
-};
-
-struct Buffering {
-  Buffering(flecs::world& world);
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);

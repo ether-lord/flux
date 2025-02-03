@@ -9,7 +9,6 @@
 using namespace std;
 using namespace flux::resources;
 
-
 namespace flux {
 
 Shaders::Shaders(flecs::world& world) {
@@ -33,11 +32,12 @@ Shaders::Shaders(flecs::world& world) {
         glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &compile_status);
 
         if (!compile_status) {
-          std::string log;
-          log.reserve(LOG_BUFF_SIZE);
+          char* log = new char[LOG_BUFF_SIZE];
 
-          glGetShaderInfoLog(vertex_shader, LOG_BUFF_SIZE, NULL, log.data());
+          glGetShaderInfoLog(vertex_shader, LOG_BUFF_SIZE, NULL, log);
           cout << log << endl;
+
+          delete[] log;
         }
 
         glAttachShader(shader.id, vertex_shader);
@@ -53,11 +53,12 @@ Shaders::Shaders(flecs::world& world) {
         glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &compile_status);
 
         if (!compile_status) {
-          std::string log;
-          log.reserve(LOG_BUFF_SIZE);
+          char* log = new char[LOG_BUFF_SIZE];
 
-          glGetShaderInfoLog(fragment_shader, LOG_BUFF_SIZE, NULL, log.data());
+          glGetShaderInfoLog(fragment_shader, LOG_BUFF_SIZE, NULL, log);
           cout << log << endl;
+
+          delete[] log;
         }
 
         glAttachShader(shader.id, fragment_shader);
@@ -68,11 +69,12 @@ Shaders::Shaders(flecs::world& world) {
         glGetProgramiv(shader.id, GL_LINK_STATUS, &link_status);
 
         if (!link_status) {
-          std::string log;
-          log.reserve(LOG_BUFF_SIZE);
+          char* log = new char[LOG_BUFF_SIZE];
 
-          glGetProgramInfoLog(shader.id, LOG_BUFF_SIZE, NULL, log.data());
+          glGetProgramInfoLog(shader.id, LOG_BUFF_SIZE, NULL, log);
           cout << log << endl;
+
+          delete[] log;
         }
 
         glDeleteShader(vertex_shader);

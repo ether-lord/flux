@@ -61,10 +61,6 @@ set(
   src/modules/movement.cpp
   src/modules/shaders.cpp
   src/modules/textures.cpp
-
-  src/modules
-
-  src/components
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)

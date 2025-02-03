@@ -40,62 +40,109 @@ Render::Render(flecs::world& world) {
 
   world.set<Window>(Window{glfw_window, video_mode});
 
-  world.import <Buffering>();
+  // world.import <Buffering>();
   world.import <Shaders>();
   world.import <Textures>();
   world.import <Camera>();
   world.import <Movement>();
   world.import <Input>();
 
-  world.system<const MeshBuffer, const Texture, const Transform>("MeshRenderer")
-      .kind(flecs::OnStore)
-      .each([](flecs::iter& it, size_t, const MeshBuffer& mesh,
-               const Texture& texture, const Transform& transform) {
-        auto projection = it.world().get<Projection>();
-
-        auto fly_camera = it.world().entity<FlyCamera>();
-        auto camera_position_cpmponent = fly_camera.get<Position>();
-        auto camera_direction_component = fly_camera.get<Direction>();
-        vec3 camera_position{camera_position_cpmponent->x,
-                             camera_position_cpmponent->y,
-                             camera_position_cpmponent->z};
-        vec3 camera_up = fly_camera.get<FlyCamera>()->up;
-        vec3 camera_target = fly_camera.get<FlyCamera>()->target;
-
-        glBindVertexArray(mesh.vao);
-
-        auto model = mat4(1.f);
-        model = translate(model, transform.position);
-        model = scale(model, transform.scale);
-        model = rotate(model, radians(transform.rotation.x), {1.f, 0.f, 0.f});
-        model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
-        model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
-
-        auto shader = it.world().lookup("flux::Shaders::default");
-        if (!shader.is_valid() || !shader.has<Shader>()) return;
-
-        auto shader_id = shader.get<Shader>()->id;
-        glUseProgram(shader_id);
-
-        int model_loc = glGetUniformLocation(shader_id, "model");
-        glUniformMatrix4fv(model_loc, 1, GL_FALSE, value_ptr(model));
-        auto view =
-            lookAt(camera_position, camera_position + camera_target, camera_up);
-        int view_loc = glGetUniformLocation(shader_id, "view");
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
-        int projection_loc = glGetUniformLocation(shader_id, "projection");
-        glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
-                           value_ptr(projection->matirx));
-
-        glBindTexture(GL_TEXTURE_2D, texture.id);
-        glDrawElements(GL_TRIANGLES, mesh.indices, GL_UNSIGNED_INT, 0);
-      });
-
   world.system<Window>("WindowPreProcessing")
       .kind(flecs::OnLoad)
       .each([=](Window& window) {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      });
+
+  world.system("Renderables batching")
+      .kind(flecs::OnStore)
+      .run([](flecs::iter& it) {
+        auto renderables =
+            it.world().query<const Mesh, const Texture, const Transform>();
+
+        renderables.each([](flecs::entity e, const Mesh& mesh,
+                            const Texture& texture,
+                            const Transform& transform) {
+          auto model = mat4(1.f);
+          model = translate(model, transform.position);
+          model = scale(model, transform.scale);
+          model = rotate(model, radians(transform.rotation.x), {1.f, 0.f, 0.f});
+          model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
+          model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
+
+          vector<float> vbo_data;
+          for (const auto& v : mesh.vertices) {
+            auto pos = vec4(v.position, 1.f);
+            pos = pos * model;
+
+            auto uv = v.uv;
+
+            vbo_data.push_back(pos.x);
+            vbo_data.push_back(pos.y);
+            vbo_data.push_back(pos.z);
+            vbo_data.push_back(uv.x);
+            vbo_data.push_back(uv.y);
+            vbo_data.push_back(texture.id);
+          }
+
+          unsigned int vao, vbo, ebo;
+
+          glGenVertexArrays(1, &vao);
+          glGenBuffers(1, &vbo);
+          glGenBuffers(1, &ebo);
+
+          glBindVertexArray(vao);
+
+          glBindBuffer(GL_ARRAY_BUFFER, vbo);
+          glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data[0]) * vbo_data.size(),
+                       &vbo_data[0], GL_STATIC_DRAW);
+
+          const auto& indices = mesh.indices;
+          auto stride = sizeof(Vertex) + sizeof(texture.id);
+
+          glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+          glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                       sizeof(indices[0]) * indices.size(), &indices[0],
+                       GL_STATIC_DRAW);
+
+          glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+          glEnableVertexAttribArray(0);
+          glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
+                                (void*)offsetof(Vertex, uv));
+          glEnableVertexAttribArray(1);
+          glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, stride,
+                                (void*)sizeof(Vertex));
+          glEnableVertexAttribArray(2);
+
+          auto projection = e.world().get<Projection>();
+
+          auto fly_camera = e.world().entity<FlyCamera>();
+          auto camera_position_cpmponent = fly_camera.get<Position>();
+          auto camera_direction_component = fly_camera.get<Direction>();
+          vec3 camera_position{camera_position_cpmponent->x,
+                               camera_position_cpmponent->y,
+                               camera_position_cpmponent->z};
+          vec3 camera_up = fly_camera.get<FlyCamera>()->up;
+          vec3 camera_target = fly_camera.get<FlyCamera>()->target;
+
+          glBindVertexArray(vao);
+
+          auto shader = e.world().lookup("flux::Shaders::default");
+          if (!shader.is_valid() || !shader.has<Shader>()) return;
+
+          auto shader_id = shader.get<Shader>()->id;
+          glUseProgram(shader_id);
+
+          auto view = lookAt(camera_position, camera_position + camera_target,
+                             camera_up);
+          int view_loc = glGetUniformLocation(shader_id, "view");
+          glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
+          int projection_loc = glGetUniformLocation(shader_id, "projection");
+          glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
+                             value_ptr(projection->matirx));
+
+          glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        });
       });
 
   world.system<Window, const InputTarget>("WindowInputHandler")
@@ -107,57 +154,6 @@ Render::Render(flecs::world& world) {
           glfwSetWindowShouldClose(
               window.ptr,
               keyboard_events[KeyboardKey::kEscape] == KeyState::kReleased);
-      });
-}
-
-Buffering::Buffering(flecs::world& world) {
-  world.component<Mesh>();
-  world.component<MeshBuffer>();
-
-  world.system<const Mesh>("Mesh Buffering System")
-      .kind(flecs::OnLoad)
-      .each([](flecs::entity e, const Mesh& mesh_data) {
-        const auto& vertices = mesh_data.vertices;
-        const auto& indices = mesh_data.indices;
-
-        vector<float> vbo_data;
-        for (const auto& v : vertices) {
-          const auto& pos = v.position;
-          const auto& uv = v.uv;
-          vbo_data.push_back(pos.x);
-          vbo_data.push_back(pos.y);
-          vbo_data.push_back(pos.z);
-          vbo_data.push_back(uv.x);
-          vbo_data.push_back(uv.y);
-        }
-
-        unsigned int vao, vbo, ebo;
-
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ebo);
-
-        glBindVertexArray(vao);
-
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data[0]) * vbo_data.size(),
-                     &vbo_data[0], GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     sizeof(indices[0]) * indices.size(), &indices[0],
-                     GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                              (void*)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                              (void*)offsetof(Vertex, uv));
-        glEnableVertexAttribArray(1);
-
-        e.remove<Mesh>();
-        e.set<MeshBuffer>(
-            MeshBuffer{.vao = vao, .indices = (unsigned int)indices.size()});
       });
 }
 
