@@ -17,6 +17,7 @@
 #include "modules/render.h"
 #include "modules/resources.h"
 #include "modules/shaders.h"
+#include "modules/textures.h"
 
 using namespace std;
 using namespace flecs;
@@ -33,7 +34,7 @@ int main() {
 
   game.import <WindowPreProcessing>();
   game.import <Shaders>();
-  game.import <TextureLoader>();
+  game.import <Textures>();
   game.import <Buffering>();
   game.import <InputHandling>();
   game.import <Movement>();

@@ -61,6 +61,7 @@ set(
   src/modules/camera.cpp
   src/modules/movement.cpp
   src/modules/shaders.cpp
+  src/modules/textures.cpp
 
   src/modules
 
