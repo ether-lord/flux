@@ -22,10 +22,12 @@ Camera::Camera(flecs::world& world) {
   world.entity<FlyCamera>().set<Direction>({0.f, 0.f, 0.f});
   world.entity<FlyCamera>().set<Speed>({0.05f});
 
-  world.system<FlyCamera, Direction, const InputTarget>("CameraMovementSystem")
+  world
+      .system<FlyCamera, Direction, Speed, const InputTarget>(
+          "CameraMovementSystem")
       .kind(flecs::PreUpdate)
       .each([](flecs::entity e, FlyCamera& camera, Direction& direction,
-               const InputTarget&) {
+               Speed& speed, const InputTarget&) {
         auto keyboard_state = e.world().get<InputData>()->keyboard_state;
 
         vec3 direction_vector{0.f};
@@ -41,6 +43,12 @@ Camera::Camera(flecs::world& world) {
                 direction_vector += camera.right;
               else if (key == KeyboardKey::kKeyA)
                 direction_vector -= camera.right;
+              else if (key == KeyboardKey::kKeyShift)
+                speed.magnitude = 0.50f;
+              break;
+            case KeyState::kReleased:
+              if (key == KeyboardKey::kKeyShift) speed.magnitude = 0.05f;
+              break;
             default:
               break;
           }

@@ -40,7 +40,6 @@ Render::Render(flecs::world& world) {
 
   world.set<Window>(Window{glfw_window, video_mode});
 
-  // world.import <Buffering>();
   world.import <Shaders>();
   world.import <Textures>();
   world.import <Camera>();
@@ -54,24 +53,16 @@ Render::Render(flecs::world& world) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       });
 
-  unsigned int vao, vbo, ebo;
-
-  world
-      .observer<const Mesh, const TextureHandle, const Transform>(
-          "Meshses Buffering observer")
-      .event(flecs::OnSet)
-      .run([](flecs::iter& it) { it.world().add<NewRenderData>(); });
-
-  glGenVertexArrays(1, &vao);
+  unsigned int meshes_vao, vbo, ebo;
+  glGenVertexArrays(1, &meshes_vao);
   glGenBuffers(1, &vbo);
   glGenBuffers(1, &ebo);
-  glBindVertexArray(vao);
+  glBindVertexArray(meshes_vao);
 
   world
       .system<const Mesh, const TextureHandle, const Transform>(
           "Meshses Buffering")
-      .run([vao, vbo, ebo](flecs::iter& it) {
-        if (!it.world().has<NewRenderData>()) return;
+      .run([meshes_vao, vbo, ebo](flecs::iter& it) {
         vector<float> vbo_data;
         vector<unsigned int> indices;
         const int vertex_parameters = 6;
@@ -129,8 +120,8 @@ Render::Render(flecs::world& world) {
                               (void*)sizeof(Vertex));
         glEnableVertexAttribArray(2);
 
-        it.world().set<MeshesRenderData>({vao, (unsigned int)indices.size()});
-        it.world().remove<NewRenderData>();
+        it.world().set<MeshesRenderData>(
+            {meshes_vao, (unsigned int)indices.size()});
       });
 
   world.system<const MeshesRenderData>("Rendering")
@@ -147,9 +138,9 @@ Render::Render(flecs::world& world) {
         vec3 camera_up = fly_camera.get<FlyCamera>()->up;
         vec3 camera_target = fly_camera.get<FlyCamera>()->target;
 
-        auto vao = render_data.vao;
+        auto meshes_vao = render_data.vao;
         auto indices = render_data.indices;
-        glBindVertexArray(vao);
+        glBindVertexArray(meshes_vao);
 
         auto shader = it.world().lookup("flux::Shaders::default");
         if (!shader.is_valid() || !shader.has<Shader>()) return;

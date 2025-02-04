@@ -87,14 +87,14 @@ int main() {
   dirt_block.set<Transform>(transform);
 
   static std::default_random_engine e;
-  static std::uniform_real_distribution<> dis(0, 50);
+  static std::uniform_real_distribution<> dis(0, 20);
 
-  for (int i = 0; i < 1000; ++i) {
+  for (int i = 0; i < 20; ++i) {
     auto dirt = game.entity().is_a(dirt_block);
 
-    dirt.get_mut<Transform>()->position.x += dis(e) - 25;
-    dirt.get_mut<Transform>()->position.y += dis(e) - 25;
-    dirt.get_mut<Transform>()->position.z += dis(e) - 25;
+    dirt.get_mut<Transform>()->position.x += dis(e) - 10;
+    dirt.get_mut<Transform>()->position.y += dis(e) - 10;
+    dirt.get_mut<Transform>()->position.z += dis(e) - 10;
   }
 
   auto window = game.get<Window>();

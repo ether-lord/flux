@@ -61,6 +61,7 @@ Input::Input(flecs::world& world) {
   keyboard_state[KeyboardKey::kKeyA] = KeyState::kNone;
   keyboard_state[KeyboardKey::kKeyS] = KeyState::kNone;
   keyboard_state[KeyboardKey::kKeyD] = KeyState::kNone;
+  keyboard_state[KeyboardKey::kKeyShift] = KeyState::kNone;
 
   world.set<InputData>(
       {.keyboard_events = keyboard_events, .keyboard_state = keyboard_state});

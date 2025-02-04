@@ -42,8 +42,6 @@ struct MeshesRenderData {
   unsigned int indices;
 };
 
-struct NewRenderData {};
-
 struct Render {
   Render(flecs::world& world);
 };

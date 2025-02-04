@@ -20,7 +20,8 @@ enum class KeyboardKey {
   kKeyW = GLFW_KEY_W,
   kKeyS = GLFW_KEY_S,
   kKeyD = GLFW_KEY_D,
-  kKeyA = GLFW_KEY_A
+  kKeyA = GLFW_KEY_A,
+  kKeyShift = GLFW_KEY_LEFT_SHIFT
 };
 
 struct InputTarget {};
