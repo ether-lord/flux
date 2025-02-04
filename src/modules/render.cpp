@@ -46,6 +46,8 @@ Render::Render(flecs::world& world) {
   world.import <Movement>();
   world.import <Input>();
 
+  world.set<AmbientLight>({{1.f, 1.f, 1.f}, 0.3});
+
   world.system<Window>("WindowPreProcessing")
       .kind(flecs::OnLoad)
       .each([=](Window& window) {
@@ -61,7 +63,7 @@ Render::Render(flecs::world& world) {
 
   world
       .system<const Mesh, const TextureHandle, const Transform>(
-          "Meshses Buffering")
+          "Meshes buffering")
       .run([meshes_vao, vbo, ebo](flecs::iter& it) {
         vector<float> vbo_data;
         vector<unsigned int> indices;
@@ -155,6 +157,13 @@ Render::Render(flecs::world& world) {
         int projection_loc = glGetUniformLocation(shader_id, "projection");
         glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
                            value_ptr(projection->matirx));
+
+        auto ambient = it.world().get<AmbientLight>();
+
+        int ambient_intencity_loc = glGetUniformLocation(shader_id, "u_ambient_intensity");
+        int ambient_color_loc = glGetUniformLocation(shader_id, "u_ambient_color");
+        glUniform1f(ambient_intencity_loc, ambient->intensity);
+        glUniform3fv(ambient_color_loc, 1, value_ptr(ambient->color));
 
         glDrawElements(GL_TRIANGLES, indices, GL_UNSIGNED_INT, 0);
       });
