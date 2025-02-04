@@ -67,7 +67,7 @@ Render::Render(flecs::world& world) {
       .run([meshes_vao, vbo, ebo](flecs::iter& it) {
         vector<float> vbo_data;
         vector<unsigned int> indices;
-        const int vertex_parameters = 6;
+        const int vertex_parameters = 9;
 
         auto renderables =
             it.world()
@@ -83,19 +83,24 @@ Render::Render(flecs::world& world) {
           model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
           model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
-          int offset = vbo_data.size() / vertex_parameters;
+          int vertex_offset = vbo_data.size() / vertex_parameters;
           for (const auto& i : mesh.indices) {
-            indices.push_back(i + offset);
+            indices.push_back(i + vertex_offset);
           }
 
           for (const auto& v : mesh.vertices) {
             auto pos = vec4(v.position, 1.f);
             pos = model * pos;
-            auto uv = v.uv;
+
+            const auto& uv = v.uv;
+            const auto& normal = v.normal;
 
             vbo_data.push_back(pos.x);
             vbo_data.push_back(pos.y);
             vbo_data.push_back(pos.z);
+            vbo_data.push_back(normal.x);
+            vbo_data.push_back(normal.y);
+            vbo_data.push_back(normal.z);
             vbo_data.push_back(uv.x);
             vbo_data.push_back(uv.y);
             vbo_data.push_back(texture.id);
@@ -115,12 +120,15 @@ Render::Render(flecs::world& world) {
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
-                              (void*)offsetof(Vertex, uv));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride,
+                              (void*)offsetof(Vertex, normal));
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, stride,
-                              (void*)sizeof(Vertex));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride,
+                              (void*)offsetof(Vertex, uv));
         glEnableVertexAttribArray(2);
+        glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, stride,
+                              (void*)sizeof(Vertex));
+        glEnableVertexAttribArray(3);
 
         it.world().set<MeshesRenderData>(
             {meshes_vao, (unsigned int)indices.size()});
@@ -160,10 +168,19 @@ Render::Render(flecs::world& world) {
 
         auto ambient = it.world().get<AmbientLight>();
 
-        int ambient_intencity_loc = glGetUniformLocation(shader_id, "u_ambient_intensity");
-        int ambient_color_loc = glGetUniformLocation(shader_id, "u_ambient_color");
+        int ambient_intencity_loc =
+            glGetUniformLocation(shader_id, "u_ambient_intensity");
+        int ambient_color_loc =
+            glGetUniformLocation(shader_id, "u_ambient_color");
         glUniform1f(ambient_intencity_loc, ambient->intensity);
         glUniform3fv(ambient_color_loc, 1, value_ptr(ambient->color));
+
+        vec3 color_position = {sin(glfwGetTime()) * 10, cos(glfwGetTime()) * 10,
+                               0.f};
+
+        int light_position_loc =
+            glGetUniformLocation(shader_id, "u_light_position");
+        glUniform3fv(light_position_loc, 1, value_ptr(color_position));
 
         glDrawElements(GL_TRIANGLES, indices, GL_UNSIGNED_INT, 0);
       });

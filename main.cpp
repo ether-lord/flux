@@ -36,40 +36,40 @@ int main() {
   Mesh dirt_block_data;
   dirt_block_data.vertices = {
       // front side : 0-3
-      {.position = {-0.5f, 0.5f, 0.5f}, .uv = {0.f, 1.f}},
-      {.position = {0.5f, 0.5f, 0.5f}, .uv = {1.f, 1.f}},
-      {.position = {0.5f, -0.5f, 0.5f}, .uv = {1.f, 0.f}},
-      {.position = {-0.5f, -0.5f, 0.5f}, .uv = {0.f, 0.f}},
+      {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {0.f, 1.f}},
+      {.position = {0.5f, 0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {1.f, 1.f}},
+      {.position = {0.5f, -0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {1.f, 0.f}},
+      {.position = {-0.5f, -0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {0.f, 0.f}},
 
       // back side : 4-7
-      {.position = {-0.5f, 0.5f, -0.5f}, .uv = {0.f, 1.f}},
-      {.position = {0.5f, 0.5f, -0.5f}, .uv = {1.f, 1.f}},
-      {.position = {0.5f, -0.5f, -0.5f}, .uv = {1.f, 0.f}},
-      {.position = {-0.5f, -0.5f, -0.5f}, .uv = {0.f, 0.f}},
+      {.position = {-0.5f, 0.5f, -0.5f}, .normal = {0.f,0.f, -1.f}, .uv = {0.f, 1.f}},
+      {.position = {0.5f, 0.5f, -0.5f}, .normal = {0.f,0.f, -1.f}, .uv = {1.f, 1.f}},
+      {.position = {0.5f, -0.5f, -0.5f}, .normal = {0.f,0.f, -1.f}, .uv = {1.f, 0.f}},
+      {.position = {-0.5f, -0.5f, -0.5f}, .normal = {0.f,0.f, -1.f}, .uv = {0.f, 0.f}},
 
       // top side : 8-11
-      {.position = {-0.5f, 0.5f, 0.5f}, .uv = {0.f, 0.f}},
-      {.position = {0.5f, 0.5f, 0.5f}, .uv = {1.f, 0.f}},
-      {.position = {0.5f, 0.5f, -0.5f}, .uv = {1.f, 1.f}},
-      {.position = {-0.5f, 0.5f, -0.5f}, .uv = {0.f, 1.f}},
+      {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0.f,1.f,0.f}, .uv = {0.f, 0.f}},
+      {.position = {0.5f, 0.5f, 0.5f}, .normal = {0.f,1.f,0.f}, .uv = {1.f, 0.f}},
+      {.position = {0.5f, 0.5f, -0.5f}, .normal = {0.f,1.f,0.f}, .uv = {1.f, 1.f}},
+      {.position = {-0.5f, 0.5f, -0.5f}, .normal = {0.f,1.f,0.f}, .uv = {0.f, 1.f}},
 
       // bottom side : 12-15
-      {.position = {-0.5f, -0.5f, 0.5f}, .uv = {0.f, 0.f}},
-      {.position = {0.5f, -0.5f, 0.5f}, .uv = {1.f, 0.f}},
-      {.position = {0.5f, -0.5f, -0.5f}, .uv = {1.f, 1.f}},
-      {.position = {-0.5f, -0.5f, -0.5f}, .uv = {0.f, 1.f}},
+      {.position = {-0.5f, -0.5f, 0.5f}, .normal = {0.f,-1.f,-0.f}, .uv = {0.f, 0.f}},
+      {.position = {0.5f, -0.5f, 0.5f}, .normal = {0.f,-1.f,-0.f}, .uv = {1.f, 0.f}},
+      {.position = {0.5f, -0.5f, -0.5f}, .normal = {0.f,-1.f,-0.f}, .uv = {1.f, 1.f}},
+      {.position = {-0.5f, -0.5f, -0.5f}, .normal = {0.f,-1.f,-0.f}, .uv = {0.f, 1.f}},
 
       // left side : 16-19
-      {.position = {-0.5f, -0.5f, -0.5f}, .uv = {0.f, 0.f}},
-      {.position = {-0.5f, -0.5f, 0.5f}, .uv = {1.f, 0.f}},
-      {.position = {-0.5f, 0.5f, 0.5f}, .uv = {1.f, 1.f}},
-      {.position = {-0.5f, 0.5f, -0.5f}, .uv = {0.f, 1.f}},
+      {.position = {-0.5f, -0.5f, -0.5f}, .normal = {-1.f, 0.f,0.f}, .uv = {0.f, 0.f}},
+      {.position = {-0.5f, -0.5f, 0.5f}, .normal = {-1.f, 0.f,0.f}, .uv = {1.f, 0.f}},
+      {.position = {-0.5f, 0.5f, 0.5f}, .normal = {-1.f, 0.f,0.f}, .uv = {1.f, 1.f}},
+      {.position = {-0.5f, 0.5f, -0.5f}, .normal = {-1.f, 0.f,0.f}, .uv = {0.f, 1.f}},
 
       // right side : 20-23
-      {.position = {0.5f, -0.5f, -0.5f}, .uv = {0.f, 0.f}},
-      {.position = {0.5f, -0.5f, 0.5f}, .uv = {1.f, 0.f}},
-      {.position = {0.5f, 0.5f, 0.5f}, .uv = {1.f, 1.f}},
-      {.position = {0.5f, 0.5f, -0.5f}, .uv = {0.f, 1.f}},
+      {.position = {0.5f, -0.5f, -0.5f}, .normal = {1.f,0.f,0.f}, .uv = {0.f, 0.f}},
+      {.position = {0.5f, -0.5f, 0.5f}, .normal = {1.f,0.f,0.f}, .uv = {1.f, 0.f}},
+      {.position = {0.5f, 0.5f, 0.5f}, .normal = {1.f,0.f,0.f}, .uv = {1.f, 1.f}},
+      {.position = {0.5f, 0.5f, -0.5f}, .normal = {1.f,0.f,0.f}, .uv = {0.f, 1.f}},
   };
 
   dirt_block_data.indices = {
@@ -89,7 +89,7 @@ int main() {
   static std::default_random_engine e;
   static std::uniform_real_distribution<> dis(0, 20);
 
-  for (int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 250; ++i) {
     auto dirt = game.entity().is_a(dirt_block);
 
     dirt.get_mut<Transform>()->position.x += dis(e) - 10;
