@@ -37,6 +37,13 @@ struct View {
   glm::mat4 matrix;
 };
 
+struct MeshesRenderData {
+  unsigned int vao;
+  unsigned int indices;
+};
+
+struct NewRenderData {};
+
 struct Render {
   Render(flecs::world& world);
 };

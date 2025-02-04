@@ -54,15 +54,35 @@ Render::Render(flecs::world& world) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       });
 
-  world.system("Renderables batching")
-      .kind(flecs::OnStore)
-      .run([](flecs::iter& it) {
-        auto renderables =
-            it.world().query<const Mesh, const Texture, const Transform>();
+  unsigned int vao, vbo, ebo;
 
-        renderables.each([](flecs::entity e, const Mesh& mesh,
-                            const Texture& texture,
-                            const Transform& transform) {
+  world
+      .observer<const Mesh, const TextureHandle, const Transform>(
+          "Meshses Buffering observer")
+      .event(flecs::OnSet)
+      .run([](flecs::iter& it) { it.world().add<NewRenderData>(); });
+
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &vbo);
+  glGenBuffers(1, &ebo);
+  glBindVertexArray(vao);
+
+  world
+      .system<const Mesh, const TextureHandle, const Transform>(
+          "Meshses Buffering")
+      .run([vao, vbo, ebo](flecs::iter& it) {
+        if (!it.world().has<NewRenderData>()) return;
+        vector<float> vbo_data;
+        vector<unsigned int> indices;
+        const int vertex_parameters = 6;
+
+        auto renderables =
+            it.world()
+                .query<const Mesh, const TextureHandle, const Transform>();
+
+        renderables.each([&](flecs::entity e, const Mesh& mesh,
+                             const TextureHandle& texture,
+                             const Transform& transform) {
           auto model = mat4(1.f);
           model = translate(model, transform.position);
           model = scale(model, transform.scale);
@@ -70,11 +90,14 @@ Render::Render(flecs::world& world) {
           model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
           model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
-          vector<float> vbo_data;
+          int offset = vbo_data.size() / vertex_parameters;
+          for (const auto& i : mesh.indices) {
+            indices.push_back(i + offset);
+          }
+
           for (const auto& v : mesh.vertices) {
             auto pos = vec4(v.position, 1.f);
-            pos = pos * model;
-
+            pos = model * pos;
             auto uv = v.uv;
 
             vbo_data.push_back(pos.x);
@@ -84,65 +107,65 @@ Render::Render(flecs::world& world) {
             vbo_data.push_back(uv.y);
             vbo_data.push_back(texture.id);
           }
-
-          unsigned int vao, vbo, ebo;
-
-          glGenVertexArrays(1, &vao);
-          glGenBuffers(1, &vbo);
-          glGenBuffers(1, &ebo);
-
-          glBindVertexArray(vao);
-
-          glBindBuffer(GL_ARRAY_BUFFER, vbo);
-          glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data[0]) * vbo_data.size(),
-                       &vbo_data[0], GL_STATIC_DRAW);
-
-          const auto& indices = mesh.indices;
-          auto stride = sizeof(Vertex) + sizeof(texture.id);
-
-          glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-          glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                       sizeof(indices[0]) * indices.size(), &indices[0],
-                       GL_STATIC_DRAW);
-
-          glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-          glEnableVertexAttribArray(0);
-          glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
-                                (void*)offsetof(Vertex, uv));
-          glEnableVertexAttribArray(1);
-          glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, stride,
-                                (void*)sizeof(Vertex));
-          glEnableVertexAttribArray(2);
-
-          auto projection = e.world().get<Projection>();
-
-          auto fly_camera = e.world().entity<FlyCamera>();
-          auto camera_position_cpmponent = fly_camera.get<Position>();
-          auto camera_direction_component = fly_camera.get<Direction>();
-          vec3 camera_position{camera_position_cpmponent->x,
-                               camera_position_cpmponent->y,
-                               camera_position_cpmponent->z};
-          vec3 camera_up = fly_camera.get<FlyCamera>()->up;
-          vec3 camera_target = fly_camera.get<FlyCamera>()->target;
-
-          glBindVertexArray(vao);
-
-          auto shader = e.world().lookup("flux::Shaders::default");
-          if (!shader.is_valid() || !shader.has<Shader>()) return;
-
-          auto shader_id = shader.get<Shader>()->id;
-          glUseProgram(shader_id);
-
-          auto view = lookAt(camera_position, camera_position + camera_target,
-                             camera_up);
-          int view_loc = glGetUniformLocation(shader_id, "view");
-          glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
-          int projection_loc = glGetUniformLocation(shader_id, "projection");
-          glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
-                             value_ptr(projection->matirx));
-
-          glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         });
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data[0]) * vbo_data.size(),
+                     &vbo_data[0], GL_STATIC_DRAW);
+
+        auto stride = sizeof(Vertex) + sizeof(TextureHandle::id);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     sizeof(indices[0]) * indices.size(), &indices[0],
+                     GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
+                              (void*)offsetof(Vertex, uv));
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 1, GL_UNSIGNED_INT, GL_FALSE, stride,
+                              (void*)sizeof(Vertex));
+        glEnableVertexAttribArray(2);
+
+        it.world().set<MeshesRenderData>({vao, (unsigned int)indices.size()});
+        it.world().remove<NewRenderData>();
+      });
+
+  world.system<const MeshesRenderData>("Rendering")
+      .kind(flecs::OnStore)
+      .each([](flecs::iter it, size_t, const MeshesRenderData& render_data) {
+        auto projection = it.world().get<Projection>();
+
+        auto fly_camera = it.world().entity<FlyCamera>();
+        auto camera_position_cpmponent = fly_camera.get<Position>();
+        auto camera_direction_component = fly_camera.get<Direction>();
+        vec3 camera_position{camera_position_cpmponent->x,
+                             camera_position_cpmponent->y,
+                             camera_position_cpmponent->z};
+        vec3 camera_up = fly_camera.get<FlyCamera>()->up;
+        vec3 camera_target = fly_camera.get<FlyCamera>()->target;
+
+        auto vao = render_data.vao;
+        auto indices = render_data.indices;
+        glBindVertexArray(vao);
+
+        auto shader = it.world().lookup("flux::Shaders::default");
+        if (!shader.is_valid() || !shader.has<Shader>()) return;
+
+        auto shader_id = shader.get<Shader>()->id;
+        glUseProgram(shader_id);
+
+        auto view =
+            lookAt(camera_position, camera_position + camera_target, camera_up);
+        int view_loc = glGetUniformLocation(shader_id, "view");
+        glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
+        int projection_loc = glGetUniformLocation(shader_id, "projection");
+        glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
+                           value_ptr(projection->matirx));
+
+        glDrawElements(GL_TRIANGLES, indices, GL_UNSIGNED_INT, 0);
       });
 
   world.system<Window, const InputTarget>("WindowInputHandler")
