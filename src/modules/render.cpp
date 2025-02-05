@@ -149,11 +149,9 @@ Render::Render(flecs::world& world) {
         auto indices = render_data.indices;
         glBindVertexArray(meshes_geometry);
 
-        auto shader_id = it.world()
-                             .get_mut<LoadedShaders>()
-                             ->shader_name_to_id["default"];
+        auto shader_id =
+            it.world().get_mut<LoadedShaders>()->shader_name_to_id["default"];
         glUseProgram(shader_id);
-        cout << shader_id << endl;
 
         auto view =
             lookAt(camera_position, camera_position + camera_target, camera_up);
@@ -172,12 +170,17 @@ Render::Render(flecs::world& world) {
         glUniform1f(ambient_intencity_loc, ambient->intensity);
         glUniform3fv(ambient_color_loc, 1, value_ptr(ambient->color));
 
-        vec3 color_position = {sin(glfwGetTime() / 3) * 10, 0.f,
+        vec3 light_position = {sin(glfwGetTime() / 3) * 10, 0.f,
                                cos(glfwGetTime() / 3) * 10};
 
         int light_position_loc =
             glGetUniformLocation(shader_id, "u_light_position");
-        glUniform3fv(light_position_loc, 1, value_ptr(color_position));
+        int view_position_loc =
+            glGetUniformLocation(shader_id, "u_view_position");
+        glUniform3fv(light_position_loc, 1, value_ptr(light_position));
+        glUniform3fv(view_position_loc, 1, value_ptr(camera_position));
+
+        float specular_strength = 0.5;
 
         glDrawElements(GL_TRIANGLES, indices, GL_UNSIGNED_INT, 0);
       });
