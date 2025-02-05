@@ -9,9 +9,6 @@ namespace flux {
 
 struct Texture {
   std::string name;
-};
-
-struct TextureHandle {
   unsigned int id;
 };
 

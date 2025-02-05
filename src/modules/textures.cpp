@@ -3,9 +3,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 
 #include <glad.h>
+#include <stb_image.h>
 
 #include "resources_manager.h"
-#include "stb_image.h"
 
 using namespace flux::resources;
 
@@ -13,24 +13,21 @@ namespace flux {
 
 Textures::Textures(flecs::world& world) {
   world.component<Texture>();
-  world.component<TextureHandle>();
   world.component<LoadedTextures>();
 
   world.add<LoadedTextures>();
 
   stbi_set_flip_vertically_on_load(true);
 
-  world.system<const Texture>("Texture Loader")
-      .kind(flecs::OnLoad)
-      .each([](flecs::entity e, const Texture& texture_data) {
+  world.observer<Texture>("Texture Loader")
+      .event(flecs::OnSet)
+      .each([](flecs::entity e, Texture& texture) {
         auto loaded_textures = e.world().get_mut<LoadedTextures>();
         auto texture_path =
-            ResourcesManager::get().GetPathToTexture(texture_data.name);
+            ResourcesManager::get().GetPathToTexture(texture.name);
 
         if (loaded_textures->texture_path_to_id.count(texture_path)) {
-          e.remove<Texture>();
-          e.set<TextureHandle>(
-              {loaded_textures->texture_path_to_id[texture_path]});
+          texture.id = loaded_textures->texture_path_to_id[texture_path];
           return;
         }
 
@@ -56,8 +53,7 @@ Textures::Textures(flecs::world& world) {
         }
         stbi_image_free(data);
 
-        e.remove<Texture>();
-        e.set<TextureHandle>({texture_id});
+        texture.id  = texture_id;
         loaded_textures->texture_path_to_id[texture_path] = texture_id;
       });
 }

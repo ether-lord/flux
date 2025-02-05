@@ -1,4 +1,6 @@
-#include "render.h"
+#include "modules/render.h"
+
+#include <glad.h>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/transform.hpp>
@@ -13,8 +15,6 @@
 
 using namespace glm;
 using namespace std;
-
-using namespace flux;
 
 namespace flux {
 
@@ -55,26 +55,27 @@ Render::Render(flecs::world& world) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       });
 
-  unsigned int meshes_vao, vbo, ebo;
-  glGenVertexArrays(1, &meshes_vao);
-  glGenBuffers(1, &vbo);
-  glGenBuffers(1, &ebo);
-  glBindVertexArray(meshes_vao);
+  unsigned int meshes_geometry, meshes_vbo, meshes_ebo;
+  glGenVertexArrays(1, &meshes_geometry);
+  glGenBuffers(1, &meshes_vbo);
+  glGenBuffers(1, &meshes_ebo);
+  glBindVertexArray(meshes_geometry);
 
   world
-      .system<const Mesh, const TextureHandle, const Transform>(
+      .system<const Mesh, const Texture, const Transform>(
           "Meshes buffering")
-      .run([meshes_vao, vbo, ebo](flecs::iter& it) {
+      .run([meshes_geometry, meshes_vbo,
+            meshes_ebo](flecs::iter& it) {
         vector<float> vbo_data;
         vector<unsigned int> indices;
         const int vertex_parameters = 9;
 
         auto renderables =
             it.world()
-                .query<const Mesh, const TextureHandle, const Transform>();
+                .query<const Mesh, const Texture, const Transform>();
 
         renderables.each([&](flecs::entity e, const Mesh& mesh,
-                             const TextureHandle& texture,
+                             const Texture& texture,
                              const Transform& transform) {
           auto model = mat4(1.f);
           model = translate(model, transform.position);
@@ -107,13 +108,13 @@ Render::Render(flecs::world& world) {
           }
         });
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, meshes_vbo);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data[0]) * vbo_data.size(),
                      &vbo_data[0], GL_STATIC_DRAW);
 
-        auto stride = sizeof(Vertex) + sizeof(TextureHandle::id);
+        auto stride = sizeof(Vertex) + sizeof(Texture::id);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes_ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                      sizeof(indices[0]) * indices.size(), &indices[0],
                      GL_STATIC_DRAW);
@@ -130,13 +131,13 @@ Render::Render(flecs::world& world) {
                               (void*)sizeof(Vertex));
         glEnableVertexAttribArray(3);
 
-        it.world().set<MeshesRenderData>(
-            {meshes_vao, (unsigned int)indices.size()});
+        it.world().set<MeshesGeometry>(
+            {meshes_geometry, (unsigned int)indices.size()});
       });
 
-  world.system<const MeshesRenderData>("Rendering")
+  world.system<const MeshesGeometry>("Rendering")
       .kind(flecs::OnStore)
-      .each([](flecs::iter it, size_t, const MeshesRenderData& render_data) {
+      .each([](flecs::iter it, size_t, const MeshesGeometry& render_data) {
         auto projection = it.world().get<Projection>();
 
         auto fly_camera = it.world().entity<FlyCamera>();
@@ -148,9 +149,9 @@ Render::Render(flecs::world& world) {
         vec3 camera_up = fly_camera.get<FlyCamera>()->up;
         vec3 camera_target = fly_camera.get<FlyCamera>()->target;
 
-        auto meshes_vao = render_data.vao;
+        auto meshes_geometry = render_data.vao;
         auto indices = render_data.indices;
-        glBindVertexArray(meshes_vao);
+        glBindVertexArray(meshes_geometry);
 
         auto shader = it.world().lookup("flux::Shaders::default");
         if (!shader.is_valid() || !shader.has<Shader>()) return;

@@ -56,6 +56,7 @@ set(
   src/resources_manager.cpp
 
   src/modules/render.cpp
+  src/modules/render.h
   src/modules/input.cpp
   src/modules/camera.cpp
   src/modules/movement.cpp
@@ -73,7 +74,6 @@ add_executable(${PROJECT_NAME} main.cpp ${ENGINE_SOURCES})
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
   src
-  src/components
   src/modules
   lib/glad/include/glad
   lib/glfw/include/GLFW

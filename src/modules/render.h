@@ -1,11 +1,9 @@
 #pragma once
 
-#include <flecs.h>
-
-#define LOG_BUFF_SIZE 1024u
 #define GLFW_INCLUDE_NONE
+#define LOG_BUFF_SIZE 1024u
 
-#include <glad.h>
+#include <flecs.h>
 #include <glfw3.h>
 
 #include <glm/glm.hpp>
@@ -38,7 +36,7 @@ struct View {
   glm::mat4 matrix;
 };
 
-struct MeshesRenderData {
+struct MeshesGeometry {
   unsigned int vao;
   unsigned int indices;
 };

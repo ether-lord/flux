@@ -19,7 +19,6 @@
 using namespace std;
 using namespace flecs;
 using namespace glm;
-
 using namespace flux;
 
 int main() {
