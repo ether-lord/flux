@@ -8,6 +8,7 @@
 
 #include "modules/camera.h"
 #include "modules/input.h"
+#include "modules/light.h"
 #include "modules/movement.h"
 #include "modules/shaders.h"
 #include "modules/textures.h"
@@ -45,8 +46,7 @@ Render::Render(flecs::world& world) {
   world.import <Camera>();
   world.import <Movement>();
   world.import <Input>();
-
-  world.set<AmbientLight>({{1.f, 1.f, 1.f}, 0.3});
+  world.import <Light>();
 
   world.system<Window>("WindowPreProcessing")
       .kind(flecs::OnLoad)
@@ -61,18 +61,14 @@ Render::Render(flecs::world& world) {
   glGenBuffers(1, &meshes_ebo);
   glBindVertexArray(meshes_geometry);
 
-  world
-      .system<const Mesh, const Texture, const Transform>(
-          "Meshes buffering")
-      .run([meshes_geometry, meshes_vbo,
-            meshes_ebo](flecs::iter& it) {
+  world.system<const Mesh, const Texture, const Transform>("Meshes buffering")
+      .run([meshes_geometry, meshes_vbo, meshes_ebo](flecs::iter& it) {
         vector<float> vbo_data;
         vector<unsigned int> indices;
         const int vertex_parameters = 9;
 
         auto renderables =
-            it.world()
-                .query<const Mesh, const Texture, const Transform>();
+            it.world().query<const Mesh, const Texture, const Transform>();
 
         renderables.each([&](flecs::entity e, const Mesh& mesh,
                              const Texture& texture,
@@ -153,11 +149,11 @@ Render::Render(flecs::world& world) {
         auto indices = render_data.indices;
         glBindVertexArray(meshes_geometry);
 
-        auto shader = it.world().lookup("flux::Shaders::default");
-        if (!shader.is_valid() || !shader.has<Shader>()) return;
-
-        auto shader_id = shader.get<Shader>()->id;
+        auto shader_id = it.world()
+                             .get_mut<LoadedShaders>()
+                             ->shader_name_to_id["default"];
         glUseProgram(shader_id);
+        cout << shader_id << endl;
 
         auto view =
             lookAt(camera_position, camera_position + camera_target, camera_up);
@@ -176,8 +172,8 @@ Render::Render(flecs::world& world) {
         glUniform1f(ambient_intencity_loc, ambient->intensity);
         glUniform3fv(ambient_color_loc, 1, value_ptr(ambient->color));
 
-        vec3 color_position = {sin(glfwGetTime()) * 10, cos(glfwGetTime()) * 10,
-                               0.f};
+        vec3 color_position = {sin(glfwGetTime() / 3) * 10, 0.f,
+                               cos(glfwGetTime() / 3) * 10};
 
         int light_position_loc =
             glGetUniformLocation(shader_id, "u_light_position");

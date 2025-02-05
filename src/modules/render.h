@@ -41,11 +41,6 @@ struct MeshesGeometry {
   unsigned int indices;
 };
 
-struct AmbientLight {
-  glm::vec3 color;
-  float intensity;
-};
-
 struct Render {
   Render(flecs::world& world);
 };

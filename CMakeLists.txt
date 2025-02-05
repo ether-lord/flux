@@ -56,7 +56,7 @@ set(
   src/resources_manager.cpp
 
   src/modules/render.cpp
-  src/modules/render.h
+  src/modules/light.cpp
   src/modules/input.cpp
   src/modules/camera.cpp
   src/modules/movement.cpp

@@ -5,15 +5,18 @@
 #include <flecs.h>
 
 #include <string>
+#include <unordered_map>
 
 namespace flux {
 
-struct ShaderData {
-  std::string name;
-};
 
 struct Shader {
+  std::string name;
   unsigned int id;
+};
+
+struct LoadedShaders {
+  std::unordered_map<std::string, unsigned int> shader_name_to_id;
 };
 
 struct Shaders {

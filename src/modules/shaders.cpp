@@ -12,16 +12,18 @@ using namespace flux::resources;
 namespace flux {
 
 Shaders::Shaders(flecs::world& world) {
-  auto default_shader = world.entity("default");
-  default_shader.set<ShaderData>({"default"});
+  world.add<LoadedShaders>();
 
-  world.system<ShaderData>("Loader")
-      .kind(flecs::OnLoad)
-      .each([](flecs::entity e, ShaderData& shader_data) {
-        Shader shader{glCreateProgram()};
+  world.observer<Shader>("Shader Loader")
+      .event(flecs::OnSet)
+      .each([](flecs::entity e, Shader& shader) {
+        auto& loaded_shaders =
+            e.world().get_mut<LoadedShaders>()->shader_name_to_id;
+        if (loaded_shaders.count(shader.name)) return;
+        shader.id = glCreateProgram();
 
         auto vertex_shader_source = ResourcesManager::get().GetShaderSource(
-            shader_data.name, GL_VERTEX_SHADER);
+            shader.name, GL_VERTEX_SHADER);
         auto vertex_shader_source_data = vertex_shader_source.data();
 
         auto vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -43,7 +45,7 @@ Shaders::Shaders(flecs::world& world) {
         glAttachShader(shader.id, vertex_shader);
 
         auto fragment_shader_source = ResourcesManager::get().GetShaderSource(
-            shader_data.name, GL_FRAGMENT_SHADER);
+            shader.name, GL_FRAGMENT_SHADER);
         auto fragment_shader_source_data = fragment_shader_source.data();
 
         auto fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -79,10 +81,11 @@ Shaders::Shaders(flecs::world& world) {
 
         glDeleteShader(vertex_shader);
         glDeleteShader(fragment_shader);
-
-        e.set<Shader>(shader);
-        e.remove<ShaderData>();
+        loaded_shaders[shader.name] = shader.id;
       });
+
+  auto default_shader = world.entity("default");
+  default_shader.set<Shader>({"default"});
 }
 
 }  // namespace flux
