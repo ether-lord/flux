@@ -5,6 +5,8 @@
 #include <glad.h>
 #include <stb_image.h>
 
+#include <iostream>
+
 #include "resources_manager.h"
 
 using namespace flux::resources;
@@ -35,6 +37,7 @@ Textures::Textures(flecs::world& world) {
         unsigned char* data =
             stbi_load(texture_path.c_str(), &width, &height, &nr_channels, 0);
 
+        std::cout << nr_channels << std::endl;
         unsigned int texture_id;
         glGenTextures(1, &texture_id);
 
@@ -45,7 +48,8 @@ Textures::Textures(flecs::world& world) {
                         GL_LINEAR_MIPMAP_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         if (data) {
-          glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+          glTexImage2D(GL_TEXTURE_2D, 0, nr_channels == 4 ? GL_RGBA : GL_RGB,
+                       width, height, 0, nr_channels == 4 ? GL_RGBA : GL_RGB,
                        GL_UNSIGNED_BYTE, data);
           glGenerateMipmap(GL_TEXTURE_2D);
         } else {
@@ -53,7 +57,7 @@ Textures::Textures(flecs::world& world) {
         }
         stbi_image_free(data);
 
-        texture.id  = texture_id;
+        texture.id = texture_id;
         loaded_textures->texture_path_to_id[texture_path] = texture_id;
       });
 }
