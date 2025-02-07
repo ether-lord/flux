@@ -89,7 +89,7 @@ int main() {
   static std::default_random_engine e;
   static std::uniform_real_distribution<> dis(0, 20);
 
-  for (int i = 0; i < 250; ++i) {
+  for (int i = 0; i < 500; ++i) {
     auto dirt = game.entity().is_a(dirt_block);
 
     dirt.get_mut<Transform>()->position.x += dis(e) - 10;

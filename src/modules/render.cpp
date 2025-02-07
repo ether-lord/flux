@@ -55,16 +55,16 @@ Render::Render(flecs::world& world) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       });
 
-  unsigned int meshes_geometry, meshes_vbo, meshes_ebo;
+  unsigned int meshes_geometry;
   glGenVertexArrays(1, &meshes_geometry);
-  glGenBuffers(1, &meshes_vbo);
-  glGenBuffers(1, &meshes_ebo);
-  glBindVertexArray(meshes_geometry);
+
+  unsigned int meshes_vertex_data;
+  glCreateBuffers(1, &meshes_vertex_data);
 
   world
       .system<const Mesh, const DiffuseMap, const Transform>("Meshes buffering")
-      .run([meshes_geometry, meshes_vbo, meshes_ebo](flecs::iter& it) {
-        vector<float> vbo_data;
+      .run([=](flecs::iter& it) {
+        vector<float> vertex_data;
         vector<unsigned int> indices;
         const int vertex_parameters = 9;
 
@@ -81,7 +81,7 @@ Render::Render(flecs::world& world) {
           model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
           model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
-          int vertex_offset = vbo_data.size() / vertex_parameters;
+          int vertex_offset = vertex_data.size() / vertex_parameters;
           for (const auto& i : mesh.indices) {
             indices.push_back(i + vertex_offset);
           }
@@ -93,48 +93,31 @@ Render::Render(flecs::world& world) {
             const auto& uv = v.uv;
             const auto& normal = v.normal;
 
-            vbo_data.push_back(pos.x);
-            vbo_data.push_back(pos.y);
-            vbo_data.push_back(pos.z);
-            vbo_data.push_back(normal.x);
-            vbo_data.push_back(normal.y);
-            vbo_data.push_back(normal.z);
-            vbo_data.push_back(uv.x);
-            vbo_data.push_back(uv.y);
-            vbo_data.push_back(texture.id);
+            vertex_data.push_back(pos.x);
+            vertex_data.push_back(pos.y);
+            vertex_data.push_back(pos.z);
+            vertex_data.push_back(normal.x);
+            vertex_data.push_back(normal.y);
+            vertex_data.push_back(normal.z);
+            vertex_data.push_back(uv.x);
+            vertex_data.push_back(uv.y);
+            vertex_data.push_back(texture.id);
           }
         });
 
-        glBindBuffer(GL_ARRAY_BUFFER, meshes_vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data[0]) * vbo_data.size(),
-                     &vbo_data[0], GL_STATIC_DRAW);
+        glNamedBufferStorage(
+            meshes_vertex_data, sizeof(float) * vertex_data.size(),
+            (const void*)vertex_data.data(), GL_DYNAMIC_STORAGE_BIT);
 
-        auto stride = sizeof(Vertex) + sizeof(DiffuseMap::id);
+        glBindVertexArray(meshes_geometry);
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes_ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     sizeof(indices[0]) * indices.size(), &indices[0],
-                     GL_STATIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, meshes_vertex_data);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride,
-                              (void*)offsetof(Vertex, normal));
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride,
-                              (void*)offsetof(Vertex, uv));
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, stride,
-                              (void*)sizeof(Vertex));
-        glEnableVertexAttribArray(3);
+        auto shader_id =
+            it.world().get_mut<LoadedShaders>()->shader_name_to_id["default"];
 
-        it.world().set<MeshesGeometry>(
-            {meshes_geometry, (unsigned int)indices.size()});
-      });
+        glUseProgram(shader_id);
 
-  world.system<const MeshesGeometry>("Rendering")
-      .kind(flecs::OnStore)
-      .each([](flecs::iter it, size_t, const MeshesGeometry& render_data) {
         auto projection = it.world().get<Projection>();
 
         auto fly_camera = it.world().entity<FlyCamera>();
@@ -146,14 +129,6 @@ Render::Render(flecs::world& world) {
         vec3 camera_up = fly_camera.get<FlyCamera>()->up;
         vec3 camera_target = fly_camera.get<FlyCamera>()->target;
 
-        auto meshes_geometry = render_data.vao;
-        auto indices = render_data.indices;
-        glBindVertexArray(meshes_geometry);
-
-        auto shader_id =
-            it.world().get_mut<LoadedShaders>()->shader_name_to_id["default"];
-        glUseProgram(shader_id);
-
         auto view =
             lookAt(camera_position, camera_position + camera_target, camera_up);
         int view_loc = glGetUniformLocation(shader_id, "view");
@@ -162,28 +137,11 @@ Render::Render(flecs::world& world) {
         glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
                            value_ptr(projection->matirx));
 
-        auto ambient = it.world().get<AmbientLight>();
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT,
+                       (const void*)indices.data());
 
-        int ambient_intencity_loc =
-            glGetUniformLocation(shader_id, "u_ambient_intensity");
-        int ambient_color_loc =
-            glGetUniformLocation(shader_id, "u_ambient_color");
-        glUniform1f(ambient_intencity_loc, ambient->intensity);
-        glUniform3fv(ambient_color_loc, 1, value_ptr(ambient->color));
-
-        vec3 light_position = {sin(glfwGetTime() / 3) * 10, 0.f,
-                               cos(glfwGetTime() / 3) * 10};
-
-        int light_position_loc =
-            glGetUniformLocation(shader_id, "u_light_position");
-        int view_position_loc =
-            glGetUniformLocation(shader_id, "u_view_position");
-        glUniform3fv(light_position_loc, 1, value_ptr(light_position));
-        glUniform3fv(view_position_loc, 1, value_ptr(camera_position));
-
-        float specular_strength = 0.5;
-
-        glDrawElements(GL_TRIANGLES, indices, GL_UNSIGNED_INT, 0);
+        glUseProgram(0);
+        glBindVertexArray(0);
       });
 
   world.system<Window, const InputTarget>("WindowInputHandler")
