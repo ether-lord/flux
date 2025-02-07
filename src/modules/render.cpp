@@ -61,17 +61,18 @@ Render::Render(flecs::world& world) {
   glGenBuffers(1, &meshes_ebo);
   glBindVertexArray(meshes_geometry);
 
-  world.system<const Mesh, const Texture, const Transform>("Meshes buffering")
+  world
+      .system<const Mesh, const DiffuseMap, const Transform>("Meshes buffering")
       .run([meshes_geometry, meshes_vbo, meshes_ebo](flecs::iter& it) {
         vector<float> vbo_data;
         vector<unsigned int> indices;
         const int vertex_parameters = 9;
 
         auto renderables =
-            it.world().query<const Mesh, const Texture, const Transform>();
+            it.world().query<const Mesh, const DiffuseMap, const Transform>();
 
         renderables.each([&](flecs::entity e, const Mesh& mesh,
-                             const Texture& texture,
+                             const DiffuseMap& texture,
                              const Transform& transform) {
           auto model = mat4(1.f);
           model = translate(model, transform.position);
@@ -108,7 +109,7 @@ Render::Render(flecs::world& world) {
         glBufferData(GL_ARRAY_BUFFER, sizeof(vbo_data[0]) * vbo_data.size(),
                      &vbo_data[0], GL_STATIC_DRAW);
 
-        auto stride = sizeof(Vertex) + sizeof(Texture::id);
+        auto stride = sizeof(Vertex) + sizeof(DiffuseMap::id);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes_ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER,

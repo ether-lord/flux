@@ -26,6 +26,7 @@ int main() {
 
   game.import <flecs::stats>();
   game.set<flecs::Rest>({});
+  flecs::log::enable_colors();
 
   game.import <Render>();
 
@@ -82,7 +83,7 @@ int main() {
 
   auto dirt_block = game.prefab("Dirt");
   dirt_block.set<Mesh>(dirt_block_data);
-  dirt_block.set<Texture>({"dirt.png"});
+  dirt_block.set<DiffuseMap>({"res/textures/crate.png"});
   dirt_block.set<Transform>(transform);
 
   static std::default_random_engine e;

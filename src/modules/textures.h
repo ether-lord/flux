@@ -7,8 +7,8 @@
 
 namespace flux {
 
-struct Texture {
-  std::string name;
+struct DiffuseMap {
+  std::string path;
   unsigned int id;
 };
 
