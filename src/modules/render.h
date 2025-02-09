@@ -3,13 +3,21 @@
 #define GLFW_INCLUDE_NONE
 #define LOG_BUFF_SIZE 1024u
 
-#include <flecs.h>
-#include <glfw3.h>
-
-#include <glm/glm.hpp>
 #include <vector>
 
+#include "flecs.h"
+#include "glfw3.h"
+#include "glm/glm.hpp"
+
 namespace flux {
+
+typedef struct {
+  unsigned int count;
+  unsigned int instance_count;
+  unsigned int first_index;
+  int base_vertex;
+  unsigned int base_instance;
+} DrawElementsIndirectCommand;
 
 struct Vertex {
   glm::vec3 position;

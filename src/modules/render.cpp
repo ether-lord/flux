@@ -1,18 +1,17 @@
-#include "modules/render.h"
+#include "render.h"
 
-#include <glad.h>
-
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/transform.hpp>
 #include <iostream>
 
-#include "modules/camera.h"
-#include "modules/input.h"
-#include "modules/light.h"
-#include "modules/movement.h"
-#include "modules/shaders.h"
-#include "modules/textures.h"
-#include "modules/window.h"
+#include "camera.h"
+#include "glad.h"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtx/transform.hpp"
+#include "input.h"
+#include "light.h"
+#include "movement.h"
+#include "shaders.h"
+#include "textures.h"
+#include "window.h"
 
 using namespace glm;
 using namespace std;
@@ -57,16 +56,35 @@ Render::Render(flecs::world& world) {
 
   unsigned int meshes_geometry;
   glGenVertexArrays(1, &meshes_geometry);
+  glBindVertexArray(meshes_geometry);
 
   unsigned int meshes_vertex_data;
   glCreateBuffers(1, &meshes_vertex_data);
+  glBindBuffer(GL_ARRAY_BUFFER, meshes_vertex_data);
 
-  world
-      .system<const Mesh, const DiffuseMap, const Transform>("Meshes buffering")
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void*)offsetof(Vertex, normal));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void*)offsetof(Vertex, uv));
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, 9 * sizeof(float),
+                        (void*)sizeof(Vertex));
+  glEnableVertexAttribArray(3);
+
+  unsigned int meshes_index_data;
+  glCreateBuffers(1, &meshes_index_data);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes_index_data);
+
+  world.system<const Mesh, const DiffuseMap, const Transform>("Rendering")
       .run([=](flecs::iter& it) {
+        glBindVertexArray(meshes_geometry);
+
         vector<float> vertex_data;
         vector<unsigned int> indices;
-        const int vertex_parameters = 9;
+        vector<DrawElementsIndirectCommand> draw_commands;
 
         auto renderables =
             it.world().query<const Mesh, const DiffuseMap, const Transform>();
@@ -74,6 +92,16 @@ Render::Render(flecs::world& world) {
         renderables.each([&](flecs::entity e, const Mesh& mesh,
                              const DiffuseMap& texture,
                              const Transform& transform) {
+          DrawElementsIndirectCommand cmd;
+          cmd.count = mesh.indices.size();
+          cmd.instance_count = 1;
+          cmd.first_index = indices.size();
+          cmd.base_vertex = vertex_data.size() / 9;
+          cmd.base_instance = 0;
+          draw_commands.push_back(cmd);
+
+          cout << cmd.count << " " << cmd.first_index << ' ' << cmd.base_vertex << endl;
+
           auto model = mat4(1.f);
           model = translate(model, transform.position);
           model = scale(model, transform.scale);
@@ -81,9 +109,8 @@ Render::Render(flecs::world& world) {
           model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
           model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
 
-          int vertex_offset = vertex_data.size() / vertex_parameters;
           for (const auto& i : mesh.indices) {
-            indices.push_back(i + vertex_offset);
+            indices.push_back(i);
           }
 
           for (const auto& v : mesh.vertices) {
@@ -105,13 +132,22 @@ Render::Render(flecs::world& world) {
           }
         });
 
+        cout << draw_commands.size() << endl;
+        cout << "===============================" << endl;
+
+        GLuint draw_cmd_buffer;
+        glCreateBuffers(1, &draw_cmd_buffer);
         glNamedBufferStorage(
-            meshes_vertex_data, sizeof(float) * vertex_data.size(),
-            (const void*)vertex_data.data(), GL_DYNAMIC_STORAGE_BIT);
+            draw_cmd_buffer,
+            sizeof(DrawElementsIndirectCommand) * draw_commands.size(),
+            (const void*)draw_commands.data(), GL_DYNAMIC_STORAGE_BIT);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, draw_cmd_buffer);
 
-        glBindVertexArray(meshes_geometry);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(),
+                     (const void*)vertex_data.data(), GL_STATIC_DRAW);
 
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, meshes_vertex_data);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * indices.size(),
+                     (const void*)indices.data(), GL_STATIC_DRAW);
 
         auto shader_id =
             it.world().get_mut<LoadedShaders>()->shader_name_to_id["default"];
@@ -137,8 +173,8 @@ Render::Render(flecs::world& world) {
         glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
                            value_ptr(projection->matirx));
 
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT,
-                       (const void*)indices.data());
+        glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT,
+                                    (const void*)0, draw_commands.size(), 0);
 
         glUseProgram(0);
         glBindVertexArray(0);
