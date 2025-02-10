@@ -30,11 +30,11 @@ int main() {
 
   game.import <Render>();
 
-  Transform transform = {.position = {1.f, 0.f, 0.f},
+  Transform transform = {.position = {1.f, -1.f, 0.f},
                          .rotation = {0.f, 0.f, 0.f}};
 
-  Mesh dirt_block_data;
-  dirt_block_data.vertices = {
+  Mesh cube_data;
+  cube_data.vertices = {
       // front side : 0-3
       {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {0.f, 1.f}},
       {.position = {0.5f, 0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {1.f, 1.f}},
@@ -72,7 +72,7 @@ int main() {
       {.position = {0.5f, 0.5f, -0.5f}, .normal = {1.f,0.f,0.f}, .uv = {0.f, 1.f}},
   };
 
-  dirt_block_data.indices = {
+  cube_data.indices = {
       0,  1,  2,  2,  3,  0,   // front side
       4,  5,  6,  6,  7,  4,   // back side
       8,  9,  10, 10, 11, 8,   // top side
@@ -81,21 +81,13 @@ int main() {
       20, 21, 22, 22, 23, 20   // right side
   };
 
-  auto dirt_block = game.prefab("Dirt");
-  dirt_block.set<Mesh>(dirt_block_data);
-  dirt_block.set<DiffuseMap>({"res/textures/crate.png"});
-  dirt_block.set<Transform>(transform);
+  auto cube = game.entity("Cube");
+  cube.set<Mesh>(cube_data);
+  cube.set<DiffuseMap>({"res/textures/crate.png"});
+  cube.set<Transform>(transform);
 
   static std::default_random_engine e;
   static std::uniform_real_distribution<> dis(0, 20);
-
-  for (int i = 0; i < 100; ++i) {
-    auto dirt = game.entity().is_a(dirt_block);
-
-    dirt.get_mut<Transform>()->position.x += dis(e) - 10;
-    dirt.get_mut<Transform>()->position.y += dis(e) - 10;
-    dirt.get_mut<Transform>()->position.z += dis(e) - 10;
-  }
 
   auto window = game.get<Window>();
   game.entity<Window>().add<InputTarget>();

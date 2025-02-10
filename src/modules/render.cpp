@@ -47,6 +47,70 @@ Render::Render(flecs::world& world) {
   world.import <Input>();
   world.import <Light>();
 
+  unsigned int meshes_geometry;
+  glGenVertexArrays(1, &meshes_geometry);
+  glBindVertexArray(meshes_geometry);
+
+  unsigned int meshes_vertex_buffer;
+  glCreateBuffers(1, &meshes_vertex_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, meshes_vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8192, 0, GL_STATIC_DRAW);
+
+  unsigned int meshes_index_buffer;
+  glCreateBuffers(1, &meshes_index_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes_index_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * 8192, 0,
+               GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshLayout), (void*)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(MeshLayout),
+                        (void*)offsetof(Vertex, normal));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(MeshLayout),
+                        (void*)offsetof(Vertex, uv));
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, sizeof(MeshLayout),
+                        (void*)sizeof(Vertex));
+  glEnableVertexAttribArray(3);
+
+  static std::unordered_map<unsigned int, DrawElementsIndirectCommand>
+      mesh_id_to_draw_command;
+
+  world.observer<Mesh>("Mesh cashing")
+      .event(flecs::OnSet)
+      .each([meshes_vertex_buffer, meshes_index_buffer](flecs::entity e,
+                                                        Mesh& mesh) {
+        static unsigned int index_offset = 0;
+        static unsigned int vertex_offset = 0;
+
+        if (mesh_id_to_draw_command.count(e.id()) > 0) return;
+
+        DrawElementsIndirectCommand draw_command = {
+            .count = (unsigned int)mesh.indices.size(),
+            .instance_count = 1,
+            .first_index = index_offset,
+            .base_vertex = vertex_offset,
+            .base_instance = 0};
+
+        mesh_id_to_draw_command[e.id()] = draw_command;
+
+        glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(Vertex),
+                     (const void*)mesh.vertices.data(), GL_STATIC_DRAW);
+
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     mesh.indices.size() * sizeof(unsigned int),
+                     (const void*)mesh.indices.data(), GL_STATIC_DRAW);
+
+        // glNamedBufferSubData(meshes_vertex_buffer, vertex_offset,
+        //                      mesh.vertices.size() * sizeof(Vertex),
+        //                      (const void*)mesh.vertices.data());
+
+        // glNamedBufferSubData(meshes_index_buffer, index_offset,
+        //                      mesh.indices.size() * sizeof(unsigned int),
+        //                      (const void*)mesh.indices.data());
+      });
+
   world.system<Window>("WindowPreProcessing")
       .kind(flecs::OnLoad)
       .each([=](Window& window) {
@@ -54,37 +118,10 @@ Render::Render(flecs::world& world) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       });
 
-  unsigned int meshes_geometry;
-  glGenVertexArrays(1, &meshes_geometry);
-  glBindVertexArray(meshes_geometry);
-
-  unsigned int meshes_vertex_data;
-  glCreateBuffers(1, &meshes_vertex_data);
-  glBindBuffer(GL_ARRAY_BUFFER, meshes_vertex_data);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
-                        (void*)offsetof(Vertex, normal));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
-                        (void*)offsetof(Vertex, uv));
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 1, GL_UNSIGNED_INT, GL_FALSE, 9 * sizeof(float),
-                        (void*)sizeof(Vertex));
-  glEnableVertexAttribArray(3);
-
-  unsigned int meshes_index_data;
-  glCreateBuffers(1, &meshes_index_data);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshes_index_data);
-
-  world.system<const Mesh, const DiffuseMap, const Transform>("Rendering")
+  world.system<const Mesh, const DiffuseMap, const Transform>("Mesh rendering")
       .run([=](flecs::iter& it) {
         glBindVertexArray(meshes_geometry);
-
-        vector<float> vertex_data;
-        vector<unsigned int> indices;
-        vector<DrawElementsIndirectCommand> draw_commands;
+        std::vector<DrawElementsIndirectCommand> draw_commands;
 
         auto renderables =
             it.world().query<const Mesh, const DiffuseMap, const Transform>();
@@ -92,15 +129,8 @@ Render::Render(flecs::world& world) {
         renderables.each([&](flecs::entity e, const Mesh& mesh,
                              const DiffuseMap& texture,
                              const Transform& transform) {
-          DrawElementsIndirectCommand cmd;
-          cmd.count = mesh.indices.size();
-          cmd.instance_count = 1;
-          cmd.first_index = indices.size();
-          cmd.base_vertex = vertex_data.size() / 9;
-          cmd.base_instance = 0;
-          draw_commands.push_back(cmd);
-
-          cout << cmd.count << " " << cmd.first_index << ' ' << cmd.base_vertex << endl;
+          for (const auto& [id, cmd] : mesh_id_to_draw_command)
+            draw_commands.push_back(cmd);
 
           auto model = mat4(1.f);
           model = translate(model, transform.position);
@@ -108,32 +138,7 @@ Render::Render(flecs::world& world) {
           model = rotate(model, radians(transform.rotation.x), {1.f, 0.f, 0.f});
           model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
           model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
-
-          for (const auto& i : mesh.indices) {
-            indices.push_back(i);
-          }
-
-          for (const auto& v : mesh.vertices) {
-            auto pos = vec4(v.position, 1.f);
-            pos = model * pos;
-
-            const auto& uv = v.uv;
-            const auto& normal = v.normal;
-
-            vertex_data.push_back(pos.x);
-            vertex_data.push_back(pos.y);
-            vertex_data.push_back(pos.z);
-            vertex_data.push_back(normal.x);
-            vertex_data.push_back(normal.y);
-            vertex_data.push_back(normal.z);
-            vertex_data.push_back(uv.x);
-            vertex_data.push_back(uv.y);
-            vertex_data.push_back(texture.id);
-          }
         });
-
-        cout << draw_commands.size() << endl;
-        cout << "===============================" << endl;
 
         GLuint draw_cmd_buffer;
         glCreateBuffers(1, &draw_cmd_buffer);
@@ -142,12 +147,6 @@ Render::Render(flecs::world& world) {
             sizeof(DrawElementsIndirectCommand) * draw_commands.size(),
             (const void*)draw_commands.data(), GL_DYNAMIC_STORAGE_BIT);
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, draw_cmd_buffer);
-
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_data.size(),
-                     (const void*)vertex_data.data(), GL_STATIC_DRAW);
-
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * indices.size(),
-                     (const void*)indices.data(), GL_STATIC_DRAW);
 
         auto shader_id =
             it.world().get_mut<LoadedShaders>()->shader_name_to_id["default"];

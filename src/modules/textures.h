@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 namespace flux {
+  
 
 struct DiffuseMap {
   std::string path;
