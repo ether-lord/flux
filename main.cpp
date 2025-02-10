@@ -83,8 +83,23 @@ int main() {
 
   auto cube = game.entity("Cube");
   cube.set<Mesh>(cube_data);
-  cube.set<DiffuseMap>({"res/textures/crate.png"});
+  cube.set<DiffuseMap>({});
   cube.set<Transform>(transform);
+
+  Mesh triangle_mesh;
+  triangle_mesh.vertices = {
+      {.position = {-0.5f, 0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {0.f, 1.f}},
+      {.position = {0.f, 0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {0.f, 1.f}},
+      {.position = {0.5f, -0.5f, 0.5f}, .normal = {0.f,0.f,1.f}, .uv = {0.f, 1.f}}
+  };
+  triangle_mesh.indices = { 0,1,2 };
+
+  auto triangle = game.entity("triangle");
+  triangle.set<Mesh>(triangle_mesh);
+  cube.set<DiffuseMap>({});
+
+  transform.position.x = -5.0f;
+  triangle.set<Transform>(transform);
 
   static std::default_random_engine e;
   static std::uniform_real_distribution<> dis(0, 20);

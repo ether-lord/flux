@@ -95,20 +95,16 @@ Render::Render(flecs::world& world) {
 
         mesh_id_to_draw_command[e.id()] = draw_command;
 
-        glBufferData(GL_ARRAY_BUFFER, mesh.vertices.size() * sizeof(Vertex),
-                     (const void*)mesh.vertices.data(), GL_STATIC_DRAW);
+        glNamedBufferSubData(meshes_vertex_buffer, vertex_offset * sizeof(Vertex),
+                             mesh.vertices.size() * sizeof(Vertex),
+                             (const void*)mesh.vertices.data());
 
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     mesh.indices.size() * sizeof(unsigned int),
-                     (const void*)mesh.indices.data(), GL_STATIC_DRAW);
+        glNamedBufferSubData(meshes_index_buffer, index_offset * sizeof(unsigned int),
+                             mesh.indices.size() * sizeof(unsigned int),
+                             (const void*)mesh.indices.data());
 
-        // glNamedBufferSubData(meshes_vertex_buffer, vertex_offset,
-        //                      mesh.vertices.size() * sizeof(Vertex),
-        //                      (const void*)mesh.vertices.data());
-
-        // glNamedBufferSubData(meshes_index_buffer, index_offset,
-        //                      mesh.indices.size() * sizeof(unsigned int),
-        //                      (const void*)mesh.indices.data());
+        vertex_offset += mesh.vertices.size();
+        index_offset += mesh.indices.size();
       });
 
   world.system<Window>("WindowPreProcessing")
