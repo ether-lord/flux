@@ -18,7 +18,12 @@ using namespace std;
 
 namespace flux {
 
+static std::unordered_map<unsigned int, DrawElementsIndirectCommand>
+    mesh_id_to_draw_command;
+
 Render::Render(flecs::world& world) {
+  world.component<Mesh>().add(flecs::Target);
+
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -62,6 +67,18 @@ Render::Render(flecs::world& world) {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(float) * 8192, 0,
                GL_STATIC_DRAW);
 
+  GLuint draw_cmd_buffer;
+  glCreateBuffers(1, &draw_cmd_buffer);
+  glBindBuffer(GL_DRAW_INDIRECT_BUFFER, draw_cmd_buffer);
+
+  auto persistent_mapped_buffer_flags =
+      GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+  glBufferStorage(GL_DRAW_INDIRECT_BUFFER, 8192, 0,
+                  persistent_mapped_buffer_flags);
+  DrawElementsIndirectCommand* draw_commands_data =
+      (DrawElementsIndirectCommand*)glMapBufferRange(
+          GL_DRAW_INDIRECT_BUFFER, 0, 8192, persistent_mapped_buffer_flags);
+
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshLayout), (void*)0);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(MeshLayout),
@@ -74,13 +91,10 @@ Render::Render(flecs::world& world) {
                         (void*)sizeof(Vertex));
   glEnableVertexAttribArray(3);
 
-  static std::unordered_map<unsigned int, DrawElementsIndirectCommand>
-      mesh_id_to_draw_command;
-
-  world.observer<Mesh>("Mesh cashing")
+  world.observer<Mesh>("Mesh buffering")
       .event(flecs::OnSet)
-      .each([meshes_vertex_buffer, meshes_index_buffer](flecs::entity e,
-                                                        Mesh& mesh) {
+      .each([meshes_vertex_buffer, meshes_index_buffer, draw_commands_data,
+             this](flecs::entity e, Mesh& mesh) {
         static unsigned int index_offset = 0;
         static unsigned int vertex_offset = 0;
 
@@ -95,14 +109,18 @@ Render::Render(flecs::world& world) {
 
         mesh_id_to_draw_command[e.id()] = draw_command;
 
-        glNamedBufferSubData(meshes_vertex_buffer, vertex_offset * sizeof(Vertex),
+        glNamedBufferSubData(meshes_vertex_buffer,
+                             vertex_offset * sizeof(Vertex),
                              mesh.vertices.size() * sizeof(Vertex),
                              (const void*)mesh.vertices.data());
 
-        glNamedBufferSubData(meshes_index_buffer, index_offset * sizeof(unsigned int),
+        glNamedBufferSubData(meshes_index_buffer,
+                             index_offset * sizeof(unsigned int),
                              mesh.indices.size() * sizeof(unsigned int),
                              (const void*)mesh.indices.data());
 
+
+        draw_commands_data[draw_commands_count++] = draw_command;
         vertex_offset += mesh.vertices.size();
         index_offset += mesh.indices.size();
       });
@@ -110,70 +128,40 @@ Render::Render(flecs::world& world) {
   world.system<Window>("WindowPreProcessing")
       .kind(flecs::OnLoad)
       .each([=](Window& window) {
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.f, 0.f, 0.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       });
 
-  world.system<const Mesh, const DiffuseMap, const Transform>("Mesh rendering")
-      .run([=](flecs::iter& it) {
-        glBindVertexArray(meshes_geometry);
-        std::vector<DrawElementsIndirectCommand> draw_commands;
+  world.system<>("Rendering").kind(flecs::OnStore).run([](flecs::iter& it) {
+    auto drawables = it.world().query<const Drawable>();
 
-        auto renderables =
-            it.world().query<const Mesh, const DiffuseMap, const Transform>();
+    auto shader_id =
+        it.world().get_mut<LoadedShaders>()->shader_name_to_id["default"];
 
-        renderables.each([&](flecs::entity e, const Mesh& mesh,
-                             const DiffuseMap& texture,
-                             const Transform& transform) {
-          for (const auto& [id, cmd] : mesh_id_to_draw_command)
-            draw_commands.push_back(cmd);
+    glUseProgram(shader_id);
 
-          auto model = mat4(1.f);
-          model = translate(model, transform.position);
-          model = scale(model, transform.scale);
-          model = rotate(model, radians(transform.rotation.x), {1.f, 0.f, 0.f});
-          model = rotate(model, radians(transform.rotation.y), {0.f, 1.f, 0.f});
-          model = rotate(model, radians(transform.rotation.z), {0.f, 0.f, 1.f});
-        });
+    auto projection = it.world().get<Projection>();
 
-        GLuint draw_cmd_buffer;
-        glCreateBuffers(1, &draw_cmd_buffer);
-        glNamedBufferStorage(
-            draw_cmd_buffer,
-            sizeof(DrawElementsIndirectCommand) * draw_commands.size(),
-            (const void*)draw_commands.data(), GL_DYNAMIC_STORAGE_BIT);
-        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, draw_cmd_buffer);
+    auto fly_camera = it.world().entity<FlyCamera>();
+    auto camera_position_cpmponent = fly_camera.get<Position>();
+    auto camera_direction_component = fly_camera.get<Direction>();
+    vec3 camera_position{camera_position_cpmponent->x,
+                         camera_position_cpmponent->y,
+                         camera_position_cpmponent->z};
+    vec3 camera_up = fly_camera.get<FlyCamera>()->up;
+    vec3 camera_target = fly_camera.get<FlyCamera>()->target;
 
-        auto shader_id =
-            it.world().get_mut<LoadedShaders>()->shader_name_to_id["default"];
+    auto view =
+        lookAt(camera_position, camera_position + camera_target, camera_up);
+    int view_loc = glGetUniformLocation(shader_id, "view");
+    glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
+    int projection_loc = glGetUniformLocation(shader_id, "projection");
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
+                       value_ptr(projection->matirx));
 
-        glUseProgram(shader_id);
-
-        auto projection = it.world().get<Projection>();
-
-        auto fly_camera = it.world().entity<FlyCamera>();
-        auto camera_position_cpmponent = fly_camera.get<Position>();
-        auto camera_direction_component = fly_camera.get<Direction>();
-        vec3 camera_position{camera_position_cpmponent->x,
-                             camera_position_cpmponent->y,
-                             camera_position_cpmponent->z};
-        vec3 camera_up = fly_camera.get<FlyCamera>()->up;
-        vec3 camera_target = fly_camera.get<FlyCamera>()->target;
-
-        auto view =
-            lookAt(camera_position, camera_position + camera_target, camera_up);
-        int view_loc = glGetUniformLocation(shader_id, "view");
-        glUniformMatrix4fv(view_loc, 1, GL_FALSE, value_ptr(view));
-        int projection_loc = glGetUniformLocation(shader_id, "projection");
-        glUniformMatrix4fv(projection_loc, 1, GL_FALSE,
-                           value_ptr(projection->matirx));
-
-        glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT,
-                                    (const void*)0, draw_commands.size(), 0);
-
-        glUseProgram(0);
-        glBindVertexArray(0);
-      });
+    glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (const void*)0,
+                                1, 0);
+  });
 
   world.system<Window, const InputTarget>("WindowInputHandler")
       .kind(flecs::PostLoad)

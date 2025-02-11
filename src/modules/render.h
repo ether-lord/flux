@@ -36,6 +36,10 @@ struct Mesh {
   std::vector<unsigned int> indices;
 };
 
+struct Drawable {
+  unsigned int mesh_id;
+};
+
 struct Transform {
   glm::vec3 position;
   glm::vec3 rotation;
@@ -56,7 +60,12 @@ struct MeshesGeometry {
 };
 
 struct Render {
+ public:
   Render(flecs::world& world);
+
+ private:
+  size_t draw_commands_count = 0;
+  const unsigned int kBuffers = 3;
 };
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
